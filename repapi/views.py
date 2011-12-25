@@ -4,7 +4,7 @@ from django.utils import simplejson as json
 
 from boundaryservice.base_views import ModelListView, ModelDetailView
 
-from repapi.models import Representative, RepresentativeSet, BOUNDARYSERVICE_BASE_URL
+from repapi.models import Representative, RepresentativeSet, app_settings
 
 class RepresentativeListView(ModelListView):
 
@@ -24,7 +24,8 @@ class RepresentativeListView(ModelListView):
 
         if 'point' in request.GET:
             # Figure out the boundaries for that point via the boundaryservice API
-            request_url = BOUNDARYSERVICE_BASE_URL + '?' + urllib.urlencode({'contains': request.GET['point']})
+            request_url = app_settings.BOUNDARYSERVICE_URL \
+                        + 'boundary/?' + urllib.urlencode({'contains': request.GET['point']})
             resp = urllib2.urlopen(request_url)
             data = json.load(resp)
             boundaries = [ o['url'] for o in data['objects'] ]

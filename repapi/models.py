@@ -5,19 +5,23 @@ from urlparse import urljoin
 from django.core import urlresolvers
 from django.db import models, transaction
 
+from appconf import AppConf
+
 from repapi.utils import slugify
 
 import logging
 logger = logging.getLogger(__name__)
 
-SCRAPERWIKI_API_BASE_URL = 'https://api.scraperwiki.com/api/1.0/'
-BOUNDARYSERVICE_BASE_URL = 'http://localhost:8000/boundary/' # TODO configurable
+class MyAppConf(AppConf):
+    SCRAPERWIKI_API_URL = 'https://api.scraperwiki.com/api/1.0/'
+    BOUNDARYSERVICE_URL = 'http://boundaries.opennorth.ca/'
+
+app_settings = MyAppConf()
 
 class RepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
         help_text="The name of the political body, e.g. BC Legislature")
     scraperwiki_name = models.CharField(max_length=100)
-    # TODO rename field
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
         
@@ -27,7 +31,7 @@ class RepresentativeSet(models.Model):
     def get_list_of_boundaries(self):
         if not self.boundary_set:
             return {}
-        set_url = BOUNDARYSERVICE_BASE_URL + self.boundary_set + '/?limit=500'
+        set_url = app_settings.BOUNDARYSERVICE_URL + self.boundary_set + '/?limit=500'
         set_data = json.load(urllib2.urlopen(set_url))
 
         boundary_dict = dict(( (slugify(b['name']), b['url']) for b in set_data['objects']))
@@ -36,7 +40,7 @@ class RepresentativeSet(models.Model):
 
     @transaction.commit_on_success
     def update_from_scraperwiki(self):
-        api_url = urljoin(SCRAPERWIKI_API_BASE_URL, 'datastore/sqlite') + '?' + urllib.urlencode({
+        api_url = urljoin(app_settings.SCRAPERWIKI_API_URL, 'datastore/sqlite') + '?' + urllib.urlencode({
             'format': 'jsondict',
             'name': self.scraperwiki_name,
             'query': 'select * from swdata'
@@ -58,7 +62,7 @@ class RepresentativeSet(models.Model):
             district_slug = slugify(rep.district_name)
             if boundaries and district_slug:
                 if district_slug not in boundaries:
-                    logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set_url))
+                    logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
                 rep.boundary_url = boundaries.get(district_slug, '')
             rep.save()
 
