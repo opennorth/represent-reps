@@ -2,7 +2,7 @@ import re
 import unicodedata
 
 def slugify(s):
-    s = re.sub(r'[^a-zA-Z]', '-', remove_accents(s))
+    s = re.sub(r'[^a-zA-Z]', '-', remove_accents(s.lower()))
     return re.sub(r'--+', '-', s)
 
 def remove_accents(s):
