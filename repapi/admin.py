@@ -13,7 +13,9 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
     update_from_scraperwiki.short_description = "Update from ScraperWiki"
     
 class RepresentativeAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['name', 'representative_set', 'district_name', 'elected_office', 'boundary_url']
+    list_filter = ['representative_set']
+    search_fields = ['name', 'district_name', 'elected_office']
     
 admin.site.register(Representative, RepresentativeAdmin)
 admin.site.register(RepresentativeSet, RepresentativeSetAdmin)
