@@ -9,7 +9,13 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
     def update_from_scraperwiki(self, request, queryset):
         for rset in queryset:
             num_updated = rset.update_from_scraperwiki()
-            self.message_user(request, "Updated %s representatives for %s" % (num_updated, rset))
+            msg = "Updated %s representatives for %s." % (num_updated, rset)
+            no_boundaries = Representative.objects.filter(representative_set=rset, boundary_url='').count()
+            if no_boundaries:
+                msg += " %s did not match a boundary." % no_boundaries
+            else:
+                msg += " All matched a boundary."
+            self.message_user(request, msg)
     update_from_scraperwiki.short_description = "Update from ScraperWiki"
     
 class RepresentativeAdmin(admin.ModelAdmin):
