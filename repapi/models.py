@@ -31,7 +31,7 @@ class RepresentativeSet(models.Model):
     def get_list_of_boundaries(self):
         if not self.boundary_set:
             return {}
-        set_url = app_settings.BOUNDARYSERVICE_URL + 'boundary/' + self.boundary_set + '/?limit=500'
+        set_url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/' + self.boundary_set + '/?limit=500'
         set_data = json.load(urllib2.urlopen(set_url))
 
         boundary_dict = dict(( (slugify(b['name']), b['url']) for b in set_data['objects']))
