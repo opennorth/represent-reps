@@ -7,5 +7,8 @@ setup(
     name='Representative API',
     packages=['repapi'],
     version='0.0.1',
-    install_requires=['django-appconf'],
+    install_requires=[
+        'django-appconf',
+        'django-jsonfield>=0.7.1'
+    ],
 )

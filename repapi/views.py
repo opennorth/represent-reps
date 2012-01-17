@@ -20,7 +20,7 @@ class RepresentativeListView(ModelListView):
         qs = super(RepresentativeListView, self).filter(request, qs)
 
         if 'districts' in request.GET:
-            qs = qs.filter(boundary_url__in=request.GET['districts'].split(','))
+            qs = qs.filter(boundary_url__in=['/boundaries/' + d for d in request.GET['districts'].split(',')])
 
         if 'point' in request.GET:
             # Figure out the boundaries for that point via the boundaryservice API
@@ -32,3 +32,6 @@ class RepresentativeListView(ModelListView):
             qs = qs.filter(boundary_url__in=boundaries)
 
         return qs
+
+class RepresentativeSetListView(ModelListView):
+    pass

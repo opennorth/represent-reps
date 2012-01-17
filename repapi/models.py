@@ -6,6 +6,7 @@ from django.core import urlresolvers
 from django.db import models, transaction
 
 from appconf import AppConf
+from jsonfield import JSONField
 
 from repapi.utils import slugify
 
@@ -55,7 +56,8 @@ class RepresentativeSet(models.Model):
         for source_rep in data:
             rep = Representative(representative_set=self)
             for fieldname in ('name', 'district_name', 'elected_office', 'source_url', 'first_name', 'last_name',
-              'party_name', 'email', 'url', 'personal_url', 'district_id', 'gender'):
+                        'party_name', 'email', 'url', 'personal_url', 'photo_url', 'district_id',
+                        'gender', 'offices', 'extra'):
                 if source_rep.get(fieldname) is not None:
                     setattr(rep, fieldname, source_rep[fieldname])
 
@@ -86,22 +88,31 @@ class Representative(models.Model):
     email = models.EmailField(blank=True)
     url = models.URLField(blank=True)
     personal_url = models.URLField(blank=True)
+    photo_url = models.URLField(blank=True)
     district_id = models.CharField(max_length=200, blank=True)
     gender = models.CharField(max_length=1, blank=True, choices = (
         ('F', 'Female'),
         ('M', 'Male')))
     
-    # offices/extra JSON fields
+    offices = JSONField(blank=True)
+    extra = JSONField(blank=True)
     
     def __unicode__(self):
         return "%s (%s for %s in %s)" % (
             self.name, self.elected_office, self.district_name, self.representative_set)
 
+    def save(self, *args, **kwargs):
+        if not self.offices:
+            self.offices = {}
+        if not self.extra:
+            self.extra = {}
+        super(Representative, self).save(*args, **kwargs)
+
     def as_dict(self):
         return dict( ( (f, getattr(self, f)) for f in
             ('name', 'district_name', 'elected_office', 'source_url', 'boundary_url',
             'first_name', 'last_name', 'party_name', 'email', 'url', 'personal_url',
-            'gender') ) )
+            'photo_url', 'gender', 'offices', 'extra') ) )
 
     @staticmethod
     def get_dicts(reps):
