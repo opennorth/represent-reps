@@ -4,6 +4,7 @@ from urlparse import urljoin
 
 from django.core import urlresolvers
 from django.db import models, transaction
+from django.template.defaultfilters import slugify
 
 from appconf import AppConf
 from jsonfield import JSONField
@@ -25,9 +26,42 @@ class RepresentativeSet(models.Model):
     scraperwiki_name = models.CharField(max_length=100)
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
+    slug = models.SlugField(max_length=300, unique=True, db_index=True, editable=False)
         
     def __unicode__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        return super(RepresentativeSet, self).save(*args, **kwargs)
+
+    @property
+    def boundary_set_url(self):
+        return u'/boundary-sets/%s/' % self.boundary_set
+
+    @property
+    def scraperwiki_url(self):
+        return u'https://scraperwiki.com/scrapers/%s/' % self.scraperwiki_name
+
+    def as_dict(self):
+        return {
+            'name': self.name,
+            'url': self.get_absolute_url(),
+            'scraperwiki_url': self.scraperwiki_url,
+            'related': {
+                'boundary_set_url': self.boundary_set_url,
+                'representatives_url': urlresolvers.reverse('repapi_representative_list', kwargs={'set_slug': self.slug})
+            }
+        }
+
+    @staticmethod
+    def get_dicts(sets):
+        return [s.as_dict() for s in sets]
+
+    @models.permalink
+    def get_absolute_url(self):
+        return 'repapi_representative_set_detail', [], {'slug': self.slug}
 
     def get_list_of_boundaries(self):
         if not self.boundary_set:
@@ -108,11 +142,21 @@ class Representative(models.Model):
             self.extra = {}
         super(Representative, self).save(*args, **kwargs)
 
+    @property
+    def representative_set_name(self):
+        return self.representative_set.name
+
     def as_dict(self):
-        return dict( ( (f, getattr(self, f)) for f in
-            ('name', 'district_name', 'elected_office', 'source_url', 'boundary_url',
+        r = dict( ( (f, getattr(self, f)) for f in
+            ('name', 'district_name', 'elected_office', 'source_url',
             'first_name', 'last_name', 'party_name', 'email', 'url', 'personal_url',
             'photo_url', 'gender', 'offices', 'extra') ) )
+        r['related'] = {
+            'representative_set_url': self.representative_set.get_absolute_url()
+        }
+        if self.boundary_url:
+            r['related']['boundary_url'] = self.boundary_url
+        return r
 
     @staticmethod
     def get_dicts(reps):

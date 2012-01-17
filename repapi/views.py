@@ -3,17 +3,29 @@ import urllib2, urllib
 from django.utils import simplejson as json
 
 from boundaryservice.base_views import ModelListView, ModelDetailView
+from boundaryservice.models import Boundary
 
 from repapi.models import Representative, RepresentativeSet, app_settings
+
+# Oh dear! We're monkey-patching Boundary.as_dict
+def boundary_related_decorator(target):
+    def inner(self):
+        r = target(self)
+        r['related']['representatives_url'] = self.get_absolute_url() + 'representatives/'
+        return r
+    return inner
+Boundary.as_dict = boundary_related_decorator(Boundary.as_dict)
 
 class RepresentativeListView(ModelListView):
 
     model = Representative
 
-    def get_qs(self, request, district=None):
+    def get_qs(self, request, district=None, set_slug=None):
         qs = super(RepresentativeListView, self).get_qs(request)
         if district:
             qs = qs.filter(boundary_url='/' + district)
+        elif set_slug:
+            qs = qs.filter(representative_set__slug=set_slug)
         return qs
 
     def filter(self, request, qs):
@@ -34,4 +46,16 @@ class RepresentativeListView(ModelListView):
         return qs
 
 class RepresentativeSetListView(ModelListView):
-    pass
+
+    model = RepresentativeSet
+
+    def get_qs(self, request):
+        qs = super(RepresentativeSetListView, self).get_qs(request)
+        return qs.select_related('representative_set')
+
+class RepresentativeSetDetailView(ModelDetailView):
+
+    model = RepresentativeSet
+
+    def get_object(self, request, qs, slug):
+        return qs.get(slug=slug)
