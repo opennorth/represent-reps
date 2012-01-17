@@ -150,7 +150,7 @@ class Representative(models.Model):
         r = dict( ( (f, getattr(self, f)) for f in
             ('name', 'district_name', 'elected_office', 'source_url',
             'first_name', 'last_name', 'party_name', 'email', 'url', 'personal_url',
-            'photo_url', 'gender', 'offices', 'extra') ) )
+            'photo_url', 'gender', 'offices', 'extra', 'representative_set_name') ) )
         r['related'] = {
             'representative_set_url': self.representative_set.get_absolute_url()
         }
