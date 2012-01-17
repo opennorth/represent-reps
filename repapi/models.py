@@ -137,7 +137,7 @@ class Representative(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.offices:
-            self.offices = {}
+            self.offices = []
         if not self.extra:
             self.extra = {}
         super(Representative, self).save(*args, **kwargs)
