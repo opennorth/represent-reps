@@ -1,4 +1,5 @@
 import json
+import re
 import urllib, urllib2
 from urlparse import urljoin
 
@@ -87,13 +88,17 @@ class RepresentativeSet(models.Model):
 
         boundaries = self.get_list_of_boundaries()
 
+        _r_whitespace = re.compile(r'[^\S\n]+', flags=re.U)
+        def clean_string(s):
+            return _r_whitespace.sub(s, ' ').strip()
+
         for source_rep in data:
             rep = Representative(representative_set=self)
             for fieldname in ('name', 'district_name', 'elected_office', 'source_url', 'first_name', 'last_name',
                         'party_name', 'email', 'url', 'personal_url', 'photo_url', 'district_id',
                         'gender', 'offices', 'extra'):
                 if source_rep.get(fieldname) is not None:
-                    setattr(rep, fieldname, source_rep[fieldname])
+                    setattr(rep, fieldname, clean_string(source_rep[fieldname]))
 
             district_slug = slugify(rep.district_name)
             if boundaries and district_slug:
