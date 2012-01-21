@@ -19,6 +19,7 @@ Boundary.as_dict = boundary_related_decorator(Boundary.as_dict)
 class RepresentativeListView(ModelListView):
 
     model = Representative
+    filterable_fields = ('name', 'first_name', 'last_name', 'district_name', 'elected_office', 'party_name')
 
     def get_qs(self, request, district=None, set_slug=None):
         qs = super(RepresentativeListView, self).get_qs(request)
