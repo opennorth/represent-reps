@@ -2,10 +2,10 @@ import urllib2, urllib
 
 from django.utils import simplejson as json
 
-from boundaryservice.base_views import ModelListView, ModelDetailView
-from boundaryservice.models import Boundary
+from boundaries.base_views import ModelListView, ModelDetailView
+from boundaries.models import Boundary
 
-from repapi.models import Representative, RepresentativeSet, app_settings
+from representatives.models import Representative, RepresentativeSet, app_settings
 
 # Oh dear! We're monkey-patching Boundary.as_dict
 def boundary_related_decorator(target):
@@ -36,7 +36,7 @@ class RepresentativeListView(ModelListView):
             qs = qs.filter(boundary_url__in=['/boundaries/' + d for d in request.GET['districts'].split(',')])
 
         if 'point' in request.GET:
-            # Figure out the boundaries for that point via the boundaryservice API
+            # Figure out the boundaries for that point via the boundaries API
             request_url = app_settings.BOUNDARYSERVICE_URL \
                         + 'boundaries/?' + urllib.urlencode({'contains': request.GET['point']})
             resp = urllib2.urlopen(request_url)

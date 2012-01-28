@@ -4,8 +4,8 @@ use_setuptools()
 from setuptools import setup
 
 setup(
-    name='Representative API',
-    packages=['repapi'],
+    name='represent-representatives',
+    packages=['representatives'],
     version='0.0.1',
     install_requires=[
         'django-appconf',

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from repapi.models import Representative, RepresentativeSet
+from representatives.models import Representative, RepresentativeSet
 
 class RepresentativeSetAdmin(admin.ModelAdmin):
 

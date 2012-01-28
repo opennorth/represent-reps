@@ -10,7 +10,7 @@ from django.template.defaultfilters import slugify
 from appconf import AppConf
 from jsonfield import JSONField
 
-from repapi.utils import slugify
+from representatives.utils import slugify
 
 import logging
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class RepresentativeSet(models.Model):
             'scraperwiki_url': self.scraperwiki_url,
             'related': {
                 'boundary_set_url': self.boundary_set_url,
-                'representatives_url': urlresolvers.reverse('repapi_representative_list', kwargs={'set_slug': self.slug})
+                'representatives_url': urlresolvers.reverse('representatives_representative_list', kwargs={'set_slug': self.slug})
             }
         }
 
@@ -62,7 +62,7 @@ class RepresentativeSet(models.Model):
 
     @models.permalink
     def get_absolute_url(self):
-        return 'repapi_representative_set_detail', [], {'slug': self.slug}
+        return 'representatives_representative_set_detail', [], {'slug': self.slug}
 
     def get_list_of_boundaries(self):
         if not self.boundary_set:
