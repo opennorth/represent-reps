@@ -6,6 +6,8 @@ This repository provides an API to elected. It depends on [represent-boundaries]
 
 The [represent-canada](http://github.com/opennorth/represent-canada) repository provides a full sample app.
 
+API documentation is available at [represent.opennorth.ca/api/](http://represent.opennorth.ca/api/#representativeset).
+
 ## Configuration
 
 Set `REPRESENTATIVES_BOUNDARYSERVICE_URL` to the base URL for a Represent boundaries API, e.g. `http://represent.opennorth.ca/`
