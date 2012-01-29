@@ -10,14 +10,18 @@ from django.template.defaultfilters import slugify
 from appconf import AppConf
 from jsonfield import JSONField
 
-from representatives.utils import slugify
+from representatives.utils import slugify, boundary_url_to_name
 
 import logging
 logger = logging.getLogger(__name__)
 
 class MyAppConf(AppConf):
     SCRAPERWIKI_API_URL = 'https://api.scraperwiki.com/api/1.0/'
-    BOUNDARYSERVICE_URL = 'http://boundaries.opennorth.ca/'
+    BOUNDARYSERVICE_URL = 'http://represent.opennorth.ca/'
+
+    # If False, makes a direct database query on the Boundary model for
+    # ?point=lat,lng queries. If True, makes an HTTP request to BOUNDARYSERVICE_URL
+    RESOLVE_POINT_REQUESTS_OVER_HTTP = False
 
 app_settings = MyAppConf()
 
@@ -70,7 +74,10 @@ class RepresentativeSet(models.Model):
         set_url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/' + self.boundary_set + '/?limit=500'
         set_data = json.load(urllib2.urlopen(set_url))
 
-        boundary_dict = dict(( (slugify(b['name']), b['url']) for b in set_data['objects']))
+        boundary_dict = dict(
+            ( (slugify(b['name']), boundary_url_to_name(b['url']))
+            for b in set_data['objects'])
+        )
 
         return boundary_dict
 
@@ -90,21 +97,30 @@ class RepresentativeSet(models.Model):
 
         _r_whitespace = re.compile(r'[^\S\n]+', flags=re.U)
         def clean_string(s):
-            return _r_whitespace.sub(s, ' ').strip()
+            return _r_whitespace.sub(' ', s).strip()
 
         for source_rep in data:
             rep = Representative(representative_set=self)
             for fieldname in ('name', 'district_name', 'elected_office', 'source_url', 'first_name', 'last_name',
                         'party_name', 'email', 'url', 'personal_url', 'photo_url', 'district_id',
-                        'gender', 'offices', 'extra'):
+                        'gender'):
                 if source_rep.get(fieldname) is not None:
                     setattr(rep, fieldname, clean_string(source_rep[fieldname]))
+            for json_fieldname in ('offices', 'extra'):
+                if source_rep.get(json_fieldname):
+                    setattr(rep, json_fieldname, json.loads(source_rep.get(json_fieldname)))
+                    if isinstance(getattr(rep, json_fieldname), list):
+                        for d in getattr(rep, json_fieldname):
+                            if isinstance(d, dict):
+                                for k in d:
+                                    if isinstance(k[d], basestring):
+                                        d[k] = clean_string(d[k])
 
             district_slug = slugify(rep.district_name)
             if boundaries and district_slug:
                 if district_slug not in boundaries:
                     logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
-                rep.boundary_url = boundaries.get(district_slug, '')
+                rep.boundary = boundaries.get(district_slug, '')
             rep.save()
 
         return len(data)
@@ -119,7 +135,8 @@ class Representative(models.Model):
     elected_office = models.CharField(max_length=200)
     source_url = models.URLField()
     
-    boundary_url = models.CharField(max_length=300, blank=True, db_index=True)
+    boundary = models.CharField(max_length=300, blank=True, db_index=True,
+        help_text="e.g. federal-electoral-districts/outremont")
     
     first_name = models.CharField(max_length=200, blank=True)
     last_name = models.CharField(max_length=200, blank=True)
@@ -150,6 +167,10 @@ class Representative(models.Model):
     @property
     def representative_set_name(self):
         return self.representative_set.name
+
+    @property
+    def boundary_url(self):
+        return '/boundaries/%s/' % self.boundary if self.boundary else ''
 
     def as_dict(self):
         r = dict( ( (f, getattr(self, f)) for f in

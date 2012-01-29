@@ -10,7 +10,7 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
         for rset in queryset:
             num_updated = rset.update_from_scraperwiki()
             msg = "Updated %s representatives for %s." % (num_updated, rset)
-            no_boundaries = Representative.objects.filter(representative_set=rset, boundary_url='').count()
+            no_boundaries = Representative.objects.filter(representative_set=rset, boundary='').count()
             if no_boundaries:
                 msg += " %s did not match a boundary." % no_boundaries
             else:
@@ -19,7 +19,7 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
     update_from_scraperwiki.short_description = "Update from ScraperWiki"
     
 class RepresentativeAdmin(admin.ModelAdmin):
-    list_display = ['name', 'representative_set', 'district_name', 'elected_office', 'boundary_url']
+    list_display = ['name', 'representative_set', 'district_name', 'elected_office', 'boundary']
     list_filter = ['representative_set']
     search_fields = ['name', 'district_name', 'elected_office']
     

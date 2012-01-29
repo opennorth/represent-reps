@@ -8,3 +8,9 @@ def slugify(s):
 def remove_accents(s):
     nkfd_form = unicodedata.normalize('NFKD', unicode(s))
     return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+
+def boundary_url_to_name(s):
+    s = s.replace('/boundaries/', '')
+    if s.endswith('/'):
+        return s[:-1]
+    return s

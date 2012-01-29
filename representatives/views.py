@@ -1,3 +1,4 @@
+import re
 import urllib2, urllib
 
 from django.utils import simplejson as json
@@ -6,6 +7,7 @@ from boundaries.base_views import ModelListView, ModelDetailView
 from boundaries.models import Boundary
 
 from representatives.models import Representative, RepresentativeSet, app_settings
+from representatives.utils import boundary_url_to_name
 
 # Oh dear! We're monkey-patching Boundary.as_dict
 def boundary_related_decorator(target):
@@ -24,7 +26,7 @@ class RepresentativeListView(ModelListView):
     def get_qs(self, request, district=None, set_slug=None):
         qs = super(RepresentativeListView, self).get_qs(request)
         if district:
-            qs = qs.filter(boundary_url='/' + district)
+            qs = qs.filter(boundary=district)
         elif set_slug:
             qs = qs.filter(representative_set__slug=set_slug)
         return qs
@@ -33,16 +35,22 @@ class RepresentativeListView(ModelListView):
         qs = super(RepresentativeListView, self).filter(request, qs)
 
         if 'districts' in request.GET:
-            qs = qs.filter(boundary_url__in=['/boundaries/' + d for d in request.GET['districts'].split(',')])
+            qs = qs.filter(boundary__in=request.GET['districts'].split(','))
 
         if 'point' in request.GET:
-            # Figure out the boundaries for that point via the boundaries API
-            request_url = app_settings.BOUNDARYSERVICE_URL \
-                        + 'boundaries/?' + urllib.urlencode({'contains': request.GET['point']})
-            resp = urllib2.urlopen(request_url)
-            data = json.load(resp)
-            boundaries = [ o['url'] for o in data['objects'] ]
-            qs = qs.filter(boundary_url__in=boundaries)
+            # Figure out the boundaries for that point
+            if app_settings.RESOLVE_POINT_REQUESTS_OVER_HTTP:
+                request_url = app_settings.BOUNDARYSERVICE_URL \
+                            + 'boundaries/?' + urllib.urlencode({'contains': request.GET['point']})
+                resp = urllib2.urlopen(request_url)
+                data = json.load(resp)
+                boundaries = [ boundary_url_to_name(o['url']) for o in data['objects'] ]
+            else:
+                lat, lon = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
+                wkt_pt = 'POINT(%s %s)' % (lon, lat)
+                boundaries = Boundary.objects.filter(shape__contains=wkt_pt).values_list('set_id', 'slug')
+                boundaries = ['/'.join(b) for b in boundaries]
+            qs = qs.filter(boundary__in=boundaries)
 
         return qs
 
