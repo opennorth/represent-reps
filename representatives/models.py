@@ -10,7 +10,8 @@ from django.template.defaultfilters import slugify
 from appconf import AppConf
 from jsonfield import JSONField
 
-from representatives.utils import slugify, boundary_url_to_name
+from representatives.utils import (slugify, boundary_url_to_name,
+                                   split_name, strip_honorific)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -113,8 +114,12 @@ class RepresentativeSet(models.Model):
                         for d in getattr(rep, json_fieldname):
                             if isinstance(d, dict):
                                 for k in d:
-                                    if isinstance(k[d], basestring):
+                                    if isinstance(d[k], basestring):
                                         d[k] = clean_string(d[k])
+
+            rep.name = strip_honorific(rep.name)
+            if not source_rep.get('first_name') or source_rep.get('last_name'):
+                (rep.first_name, rep.last_name) = split_name(rep.name)
 
             district_slug = slugify(rep.district_name)
             if boundaries and district_slug:
