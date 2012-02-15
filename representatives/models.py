@@ -98,7 +98,7 @@ class RepresentativeSet(models.Model):
 
         _r_whitespace = re.compile(r'[^\S\n]+', flags=re.U)
         def clean_string(s):
-            return _r_whitespace.sub(' ', s).strip()
+            return _r_whitespace.sub(' ', str(s)).strip()
 
         for source_rep in data:
             rep = Representative(representative_set=self)
