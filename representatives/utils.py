@@ -2,7 +2,7 @@ import re
 import unicodedata
 
 def slugify(s):
-    s = re.sub(r'[^a-zA-Z]', '-', remove_accents(s.lower()))
+    s = re.sub(r'[^a-zA-Z0-9]', '-', remove_accents(s.lower()))
     return re.sub(r'--+', '-', s)
 
 def remove_accents(s):
@@ -15,7 +15,7 @@ def boundary_url_to_name(s):
         return s[:-1]
     return s
 
-_r_honorific = re.compile(r'^(Hon|Mr|Mrs|Ms)\.\s')
+_r_honorific = re.compile(r'^(Hon|Mr|Mrs|Ms)\.?\s')
 def strip_honorific(s):
     return _r_honorific.sub('', s)
 
