@@ -74,13 +74,7 @@ class RepresentativeSet(models.Model):
             return {}
         set_url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/' + self.boundary_set + '/?limit=500'
         set_data = json.load(urllib2.urlopen(set_url))
-
-        boundary_dict = dict(
-            ( (slugify(b['name']), boundary_url_to_name(b['url']))
-            for b in set_data['objects'])
-        )
-
-        return boundary_dict
+        return set_data['objects']
 
     @transaction.commit_on_success
     def update_from_scraperwiki(self):
@@ -121,11 +115,21 @@ class RepresentativeSet(models.Model):
             if not source_rep.get('first_name') or source_rep.get('last_name'):
                 (rep.first_name, rep.last_name) = split_name(rep.name)
 
-            district_slug = slugify(rep.district_name)
-            if boundaries and district_slug:
-                if district_slug not in boundaries:
-                    logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
-                rep.boundary = boundaries.get(district_slug, '')
+            boundary = None
+            if source_rep.get('boundary_url') is not None:
+                boundary = next((b for b in boundaries if b['url'] == source_rep['boundary_url']), None)
+            if boundary is None and boundaries:
+                if rep.district_id:
+                    boundary = next((b for b in boundaries if b['external_id'] == rep.district_id), None)
+                if boundary is None:
+                    district_slug = slugify(rep.district_name)
+                    if district_slug:
+                        boundary = next((b for b in boundaries if slugify(b['district_name']) == district_slug), None)
+
+            if boundary is None:
+                logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
+            else:
+                rep.boundary = boundary_url_to_name(boundary['url'])
             rep.save()
 
         return len(data)
