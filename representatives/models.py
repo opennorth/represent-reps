@@ -10,7 +10,7 @@ from django.template.defaultfilters import slugify
 from appconf import AppConf
 from jsonfield import JSONField
 
-from representatives.utils import (slugify, boundary_url_to_name,
+from representatives.utils import (get_comparison_string, boundary_url_to_name,
                                    split_name, strip_honorific)
 
 import logging
@@ -122,9 +122,9 @@ class RepresentativeSet(models.Model):
                 if rep.district_id:
                     boundary = next((b for b in boundaries if b['external_id'] == rep.district_id), None)
                 if boundary is None:
-                    district_slug = slugify(rep.district_name)
+                    district_slug = get_comparison_string(rep.district_name)
                     if district_slug:
-                        boundary = next((b for b in boundaries if slugify(b['name']) == district_slug), None)
+                        boundary = next((b for b in boundaries if get_comparison_string(b['name']) == district_slug), None)
 
             if boundary is None:
                 logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))

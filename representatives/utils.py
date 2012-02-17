@@ -1,7 +1,10 @@
 import re
 import unicodedata
 
-def slugify(s):
+def get_comparison_string(s):
+    """Given a string or unicode, returns a simplified lowercase whitespace-free ASCII string.
+    Used to compare slightly different versions of the same thing, which may differ in case,
+    spacing, or use of accents."""
     s = re.sub(r'[^a-zA-Z0-9]', '-', remove_accents(s.lower()))
     return re.sub(r'--+', '-', s)
 
