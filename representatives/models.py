@@ -124,7 +124,7 @@ class RepresentativeSet(models.Model):
                 if boundary is None:
                     district_slug = slugify(rep.district_name)
                     if district_slug:
-                        boundary = next((b for b in boundaries if slugify(b['district_name']) == district_slug), None)
+                        boundary = next((b for b in boundaries if slugify(b['name']) == district_slug), None)
 
             if boundary is None:
                 logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
