@@ -89,6 +89,12 @@ class RepresentativeSet(models.Model):
         self.representative_set.all().delete()
 
         boundaries = self.get_list_of_boundaries()
+        boundary_names = dict((
+            (get_comparison_string(b['name']), b['url']) for b in boundaries
+        ))
+        boundary_ids = dict((
+            (b.get('external_id'), b['url']) for b in boundaries
+        ))
 
         _r_whitespace = re.compile(r'[^\S\n]+', flags=re.U)
         def clean_string(s):
@@ -115,21 +121,20 @@ class RepresentativeSet(models.Model):
             if not source_rep.get('first_name') or source_rep.get('last_name'):
                 (rep.first_name, rep.last_name) = split_name(rep.name)
 
-            boundary = None
-            if source_rep.get('boundary_url') is not None:
-                boundary = next((b for b in boundaries if b['url'] == source_rep['boundary_url']), None)
-            if boundary is None and boundaries:
+            boundary_url = None
+            # Match boundary based on 'boundary_url', then 'district_id', then 'district_name'
+            if source_rep.get('boundary_url') and _check_boundary_validity(source_rep['boundary_url']):
+                boundary_url = source_rep['boundary_url']
+            elif boundaries:
                 if rep.district_id:
-                    boundary = next((b for b in boundaries if b['external_id'] == rep.district_id), None)
-                if boundary is None:
-                    district_slug = get_comparison_string(rep.district_name)
-                    if district_slug:
-                        boundary = next((b for b in boundaries if get_comparison_string(b['name']) == district_slug), None)
+                    boundary_url = boundary_ids.get(rep.district_id)
+                if not boundary_url:
+                    boundary_url = boundary_names.get(get_comparison_string(rep.district_name))
 
-            if boundary is None:
+            if not boundary_url:
                 logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
             else:
-                rep.boundary = boundary_url_to_name(boundary['url'])
+                rep.boundary = boundary_url_to_name(boundary_url)
             rep.save()
 
         return len(data)
@@ -196,3 +201,13 @@ class Representative(models.Model):
     @staticmethod
     def get_dicts(reps):
         return [ rep.as_dict() for rep in reps ]
+
+def _check_boundary_validity(boundary_url):
+    """Check that a given boundary URL matches a boundary on the web service."""
+    if not re.search(r'^/boundaries/[^/\s]+/[^/\s]+/$', boundary_url):
+        return False
+    try:
+        resp = urllib2.urlopen(urljoin(app_settings.BOUNDARYSERVICE_URL, boundary_url))
+        return resp.code == 200
+    except urllib2.HTTPError:
+        return False
