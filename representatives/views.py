@@ -1,6 +1,7 @@
 import re
 import urllib2, urllib
 
+from django.http import HttpResponseBadRequest
 from django.utils import simplejson as json
 
 from boundaries.base_views import ModelListView, ModelDetailView
@@ -38,6 +39,10 @@ class RepresentativeListView(ModelListView):
             qs = qs.filter(boundary__in=request.GET['districts'].split(','))
 
         if 'point' in request.GET:
+            lat, lon = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
+            if not lat and not lon:
+                return HttpResponseBadRequest()
+
             # Figure out the boundaries for that point
             if app_settings.RESOLVE_POINT_REQUESTS_OVER_HTTP:
                 request_url = app_settings.BOUNDARYSERVICE_URL \
@@ -46,7 +51,6 @@ class RepresentativeListView(ModelListView):
                 data = json.load(resp)
                 boundaries = [ boundary_url_to_name(o['url']) for o in data['objects'] ]
             else:
-                lat, lon = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
                 wkt_pt = 'POINT(%s %s)' % (lon, lat)
                 boundaries = Boundary.objects.filter(shape__contains=wkt_pt).values_list('set_id', 'slug')
                 boundaries = ['/'.join(b) for b in boundaries]
