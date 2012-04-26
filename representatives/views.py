@@ -3,7 +3,7 @@ import urllib2, urllib
 
 from django.utils import simplejson as json
 
-from boundaries.base_views import ModelListView, ModelDetailView
+from boundaries.base_views import ModelListView, ModelDetailView, BadRequestException
 from boundaries.models import Boundary
 
 from representatives.models import Representative, RepresentativeSet, app_settings
@@ -46,8 +46,11 @@ class RepresentativeListView(ModelListView):
                 data = json.load(resp)
                 boundaries = [ boundary_url_to_name(o['url']) for o in data['objects'] ]
             else:
-                lat, lon = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
-                wkt_pt = 'POINT(%s %s)' % (lon, lat)
+                try:
+                    lat, lon = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
+                    wkt_pt = 'POINT(%s %s)' % (lon, lat)
+                except ValueError:
+                    raise BadRequestException("Invalid lat/lon values")
                 boundaries = Boundary.objects.filter(shape__contains=wkt_pt).values_list('set_id', 'slug')
                 boundaries = ['/'.join(b) for b in boundaries]
             qs = qs.filter(boundary__in=boundaries)
