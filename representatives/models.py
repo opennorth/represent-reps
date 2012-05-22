@@ -117,8 +117,10 @@ class RepresentativeSet(models.Model):
                                     if isinstance(d[k], basestring):
                                         d[k] = clean_string(d[k])
 
+            if not source_rep.get('name'):
+                rep.name = ' '.join(filter(None, [source_rep.get('first_name'), source_rep.get('last_name')]))
             rep.name = strip_honorific(rep.name)
-            if not source_rep.get('first_name') or source_rep.get('last_name'):
+            if not source_rep.get('first_name') and not source_rep.get('last_name'):
                 (rep.first_name, rep.last_name) = split_name(rep.name)
 
             boundary_url = None
