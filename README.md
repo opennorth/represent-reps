@@ -2,7 +2,7 @@
 
 [Represent](http://represent.opennorth.ca) is the open database of Canadian elected representatives and electoral districts. It provides a RESTful API to boundary, representative, and postcode resources.
 
-This repository provides an API to elected. It depends on [represent-boundaries](http://github.com/rhymeswithcycle/represent-boundaries). It expects source data to come from scrapers on [ScraperWiki](http://scraperwiki.com/).
+This repository provides an API to elected officials. It depends on [represent-boundaries](http://github.com/rhymeswithcycle/represent-boundaries). It expects source data to come from scrapers on [ScraperWiki](http://scraperwiki.com/).
 
 The [represent-canada](http://github.com/opennorth/represent-canada) repository provides a full sample app.
 
