@@ -120,8 +120,8 @@ class RepresentativeSet(models.Model):
         # Abbreviates province name, and formats last line of address.
         def clean_address(s):
             for k, v in abbreviations.iteritems():
-                s = re.sub(r'(?<=[,\n ])' + k + r'(?=[,\n ]+([A-Z][0-9][A-Z]) ?([0-9][A-Z][0-9]))$', v, s)
-            return re.sub(r'[,\n ]+([A-Z]{2})[,\n ]+([A-Z][0-9][A-Z]) ?([0-9][A-Z][0-9])$', r' \1  \2 \3', s)
+                s = re.sub(r'(?<=[,\n ])' + k + r'(?=[,\n ]+[A-Z][0-9][A-Z] ?[0-9][A-Z][0-9]\Z)', v, s)
+            return re.sub(r'[,\n ]+([A-Z]{2})[,\n ]+([A-Z][0-9][A-Z]) ?([0-9][A-Z][0-9])\Z', r' \1  \2 \3', s)
 
         # @see http://www.noslangues-ourlanguages.gc.ca/bien-well/fra-eng/typographie-typography/telephone-eng.html
         def clean_tel(s):
@@ -129,7 +129,7 @@ class RepresentativeSet(models.Model):
             if len(digits) == 10:
                 digits = '1' + digits
             if len(digits) == 11 and digits[0] == '1':
-                return re.sub(r'^(\d)(\d{3})(\d{3})(\d{4})$', r'\1-\2-\3-\4', digits)
+                return re.sub(r'\A(\d)(\d{3})(\d{3})(\d{4})\Z', r'\1-\2-\3-\4', digits)
             else:
                 return s
 
