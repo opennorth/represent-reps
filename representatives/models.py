@@ -159,6 +159,8 @@ class RepresentativeSet(models.Model):
                                                 d[k] = clean_tel(d[k])
                                         else:
                                             del d[k]
+                                    elif d[k] is None:
+                                        del d[k]
 
             if not source_rep.get('name'):
                 rep.name = ' '.join(filter(None, [source_rep.get('first_name'), source_rep.get('last_name')]))
