@@ -1,3 +1,4 @@
+# coding: utf-8
 import json
 import re
 import urllib, urllib2
@@ -107,7 +108,7 @@ class RepresentativeSet(models.Model):
             'Saskatchewan': 'SK',
             'Manitoba': 'MB',
             'Ontario': 'ON',
-            'Québec': 'QC',
+            u'Québec': 'QC',
             'New Brunswick': 'NB',
             'Prince Edward Island': 'PE',
             'Nova Scotia': 'NS',
@@ -119,8 +120,8 @@ class RepresentativeSet(models.Model):
         # Abbreviates province name, and formats last line of address.
         def clean_address(s):
             for k, v in abbreviations.iteritems():
-                re.replace(k, v)
-            return re.sub(r', ([A-Z]{2})[,\n ]+([A-Z][0-9][A-Z]) ?([0-9][A-Z][0-9])$', r' \1  \2 \3', s)
+                s = re.sub(r'(?<=[,\n ])' + k + r'(?=[,\n ]+([A-Z][0-9][A-Z]) ?([0-9][A-Z][0-9]))$', v, s)
+            return re.sub(r'[,\n ]+([A-Z]{2})[,\n ]+([A-Z][0-9][A-Z]) ?([0-9][A-Z][0-9])$', r' \1  \2 \3', s)
 
         # @see http://www.noslangues-ourlanguages.gc.ca/bien-well/fra-eng/typographie-typography/telephone-eng.html
         def clean_tel(s):
