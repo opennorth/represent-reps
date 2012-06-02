@@ -97,8 +97,40 @@ class RepresentativeSet(models.Model):
         ))
 
         _r_whitespace = re.compile(r'[^\S\n]+', flags=re.U)
+        # Make all whitespace either newlines or spaces and remove whitespace around newlines.
         def clean_string(s):
-            return _r_whitespace.sub(' ', unicode(s)).strip()
+            return re.sub(r' *\n *', "\n", _r_whitespace.sub(' ', unicode(s)).strip())
+
+        abbreviations = {
+            'British Columbia': 'BC',
+            'Alberta': 'AB',
+            'Saskatchewan': 'SK',
+            'Manitoba': 'MB',
+            'Ontario': 'ON',
+            'Québec': 'QC',
+            'New Brunswick': 'NB',
+            'Prince Edward Island': 'PE',
+            'Nova Scotia': 'NS',
+            'Newfoundland and Labrador': 'NL',
+            'Yukon': 'YT',
+            'Northwest Territories': 'NT',
+            'Nunavut': 'NU',
+        }
+        # Abbreviates province name, and formats last line of address.
+        def clean_address(s):
+            for k, v in abbreviations.iteritems():
+                re.replace(k, v)
+            return re.sub(r', ([A-Z]{2})[,\n ]+([A-Z][0-9][A-Z]) ?([0-9][A-Z][0-9])$', r' \1  \2 \3', s)
+
+        # @see http://www.noslangues-ourlanguages.gc.ca/bien-well/fra-eng/typographie-typography/telephone-eng.html
+        def clean_tel(s):
+            digits = re.sub(r'\D', '', s)
+            if len(digits) == 10:
+                digits = '1' + digits
+            if len(digits) == 11 and digits[0] == '1':
+                return re.sub(r'^(\d)(\d{3})(\d{3})(\d{4})$', r'\1-\2-\3-\4', digits)
+            else:
+                return s
 
         for source_rep in data:
             rep = Representative(representative_set=self)
@@ -116,6 +148,10 @@ class RepresentativeSet(models.Model):
                                 for k in d:
                                     if isinstance(d[k], basestring):
                                         d[k] = clean_string(d[k])
+                                        if k == 'postal':
+                                            d[k] = clean_address(d[k])
+                                        elif k in ['tel', 'alt', 'fax', 'tollfree']:
+                                            d[k] = clean_tel(d[k])
 
             if not source_rep.get('name'):
                 rep.name = ' '.join(filter(None, [source_rep.get('first_name'), source_rep.get('last_name')]))
