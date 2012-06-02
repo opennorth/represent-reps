@@ -147,13 +147,16 @@ class RepresentativeSet(models.Model):
                     if isinstance(getattr(rep, json_fieldname), list):
                         for d in getattr(rep, json_fieldname):
                             if isinstance(d, dict):
-                                for k in d:
+                                for k in d.keys():
                                     if isinstance(d[k], basestring):
-                                        d[k] = clean_string(d[k])
-                                        if k == 'postal':
-                                            d[k] = clean_address(d[k])
-                                        elif k in ['tel', 'alt', 'fax', 'tollfree']:
-                                            d[k] = clean_tel(d[k])
+                                        if d[k]:
+                                            d[k] = clean_string(d[k])
+                                            if k == 'postal':
+                                                d[k] = clean_address(d[k])
+                                            elif k in ['tel', 'alt', 'fax', 'tollfree']:
+                                                d[k] = clean_tel(d[k])
+                                        else:
+                                            del d[k]
 
             if not source_rep.get('name'):
                 rep.name = ' '.join(filter(None, [source_rep.get('first_name'), source_rep.get('last_name')]))
