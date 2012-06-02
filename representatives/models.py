@@ -110,6 +110,7 @@ class RepresentativeSet(models.Model):
             'Ontario': 'ON',
             u'Québec': 'QC',
             'New Brunswick': 'NB',
+            'PEI': 'PE',
             'Prince Edward Island': 'PE',
             'Nova Scotia': 'NS',
             'Newfoundland and Labrador': 'NL',
