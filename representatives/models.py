@@ -48,6 +48,10 @@ class RepresentativeSet(models.Model):
         return u'/boundary-sets/%s/' % self.boundary_set
 
     @property
+    def boundaries_url(self):
+        return u'/boundaries/%s/' % self.boundary_set
+
+    @property
     def scraperwiki_url(self):
         return u'https://scraperwiki.com/scrapers/%s/' % self.scraperwiki_name
 
@@ -58,6 +62,7 @@ class RepresentativeSet(models.Model):
             'scraperwiki_url': self.scraperwiki_url,
             'related': {
                 'boundary_set_url': self.boundary_set_url,
+                'boundaries_url': self.boundaries_url,
                 'representatives_url': urlresolvers.reverse('representatives_representative_list', kwargs={'set_slug': self.slug})
             }
         }
