@@ -45,11 +45,11 @@ class RepresentativeSet(models.Model):
 
     @property
     def boundary_set_url(self):
-        return u'/boundary-sets/%s/' % self.boundary_set
+        return u'/boundary-sets/%s/' % self.boundary_set if self.boundary_set else ''
 
     @property
     def boundaries_url(self):
-        return u'/boundaries/%s/' % self.boundary_set
+        return u'/boundaries/%s/' % self.boundary_set if self.boundary_set else ''
 
     @property
     def scraperwiki_url(self):
