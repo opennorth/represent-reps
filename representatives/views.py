@@ -49,9 +49,9 @@ class RepresentativeListView(ModelListView):
                 try:
                     lat, lon = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
                     wkt_pt = 'POINT(%s %s)' % (lon, lat)
+                    boundaries = Boundary.objects.filter(shape__contains=wkt_pt).values_list('set_id', 'slug')
                 except ValueError:
                     raise BadRequest("Invalid lat/lon values")
-                boundaries = Boundary.objects.filter(shape__contains=wkt_pt).values_list('set_id', 'slug')
                 boundaries = ['/'.join(b) for b in boundaries]
             qs = qs.filter(boundary__in=boundaries)
 
