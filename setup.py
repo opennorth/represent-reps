@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='represent-representatives',
-    packages=['representatives'],
+    packages=['representatives', 'representatives.management', 'representatives.management.commands'],
     version='0.0.1',
     install_requires=[
         'django-appconf',
