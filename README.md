@@ -24,4 +24,4 @@ For more information on the format expected from ScraperWiki, see the Represent 
 
 ## Contact
 
-Please use [GitHub Issues](http://github.com/rhymeswithcycle/represent-reps/issues) for bug reports. You can also contact represent@opennorth.ca.
+Please use [GitHub Issues](http://github.com/opennorth/represent-canada/issues) for bug reports. You can also contact represent@opennorth.ca.

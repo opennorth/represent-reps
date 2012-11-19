@@ -9,6 +9,7 @@ from django.db import models, transaction
 from django.template.defaultfilters import slugify
 
 from appconf import AppConf
+import dateutil.parser
 from jsonfield import JSONField
 
 from representatives.utils import (get_comparison_string, boundary_url_to_name,
@@ -31,6 +32,8 @@ class RepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
         help_text="The name of the political body, e.g. BC Legislature")
     scraperwiki_name = models.CharField(max_length=100)
+    last_scrape_time = models.DateTimeField(blank=True, null=True)
+    last_scrape_successful = models.NullBooleanField(blank=True, null=True)
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
     slug = models.SlugField(max_length=300, unique=True, db_index=True, editable=False)
@@ -82,8 +85,27 @@ class RepresentativeSet(models.Model):
         set_data = json.load(urllib2.urlopen(set_url))
         return set_data['objects']
 
+    def update_scrape_status(self):
+        """Checks from Scraperwiki whether the last scrape was successful."""
+        api_url = urljoin(app_settings.SCRAPERWIKI_API_URL,
+            'scraper/getruninfo') + '?' + urllib.urlencode({
+                'format': 'jsondict',
+                'name': self.scraperwiki_name
+            })
+        data = json.load(urllib2.urlopen(api_url))
+
+        self.last_scrape_time = dateutil.parser.parse(data[0]['run_ended'])
+        self.last_scrape_successful = not bool(data[0].get('exception_message'))
+        self.save()
+        return self.last_scrape_successful
+
     @transaction.commit_on_success
     def update_from_scraperwiki(self):
+
+        if not self.update_scrape_status():
+            # Don't update data if the scraper threw an exception on the last run
+            return False
+
         api_url = urljoin(app_settings.SCRAPERWIKI_API_URL, 'datastore/sqlite') + '?' + urllib.urlencode({
             'format': 'jsondict',
             'name': self.scraperwiki_name,

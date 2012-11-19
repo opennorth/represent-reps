@@ -9,6 +9,7 @@ setup(
     version='0.0.1',
     install_requires=[
         'django-appconf',
-        'django-jsonfield>=0.7.1'
+        'django-jsonfield>=0.7.1',
+        'python-dateutil',
     ],
 )
