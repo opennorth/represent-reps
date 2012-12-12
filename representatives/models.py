@@ -248,6 +248,7 @@ class CandidateSet(BaseRepresentativeSet):
 
     def as_dict(self):
         r = super(CandidateSet, self).as_dict()
+        r['election_date'] = unicode(self.election_date) if self.election_date else None
         r['related']['candidates_url'] = urlresolvers.reverse(
             'representatives_candidate_list', kwargs={'set_slug': self.slug})
         return r
