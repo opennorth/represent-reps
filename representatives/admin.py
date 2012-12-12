@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 
-from representatives.models import Representative, RepresentativeSet
+from representatives.models import *
 
 class RepresentativeSetAdmin(admin.ModelAdmin):
 
@@ -26,6 +26,13 @@ class RepresentativeAdmin(admin.ModelAdmin):
     list_display = ['name', 'representative_set', 'district_name', 'elected_office', 'boundary']
     list_filter = ['representative_set']
     search_fields = ['name', 'district_name', 'elected_office']
+
+class CandidateAdmin(admin.ModelAdmin):
+    list_display = ['name', 'candidate_set', 'district_name', 'elected_office', 'boundary']
+    list_filter = ['candidate_set']
+    search_fields = ['name', 'district_name', 'elected_office']    
     
 admin.site.register(Representative, RepresentativeAdmin)
 admin.site.register(RepresentativeSet, RepresentativeSetAdmin)
+admin.site.register(Candidate, CandidateAdmin)
+admin.site.register(CandidateSet, RepresentativeSetAdmin)

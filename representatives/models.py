@@ -28,7 +28,7 @@ class MyAppConf(AppConf):
 
 app_settings = MyAppConf()
 
-class RepresentativeSet(models.Model):
+class BaseRepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
         help_text="The name of the political body, e.g. BC Legislature")
     scraperwiki_name = models.CharField(max_length=100)
@@ -37,14 +37,17 @@ class RepresentativeSet(models.Model):
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
     slug = models.SlugField(max_length=300, unique=True, db_index=True, editable=False)
-        
+
+    class Meta:
+        abstract = True
+
     def __unicode__(self):
         return self.name
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
-        return super(RepresentativeSet, self).save(*args, **kwargs)
+        return super(BaseRepresentativeSet, self).save(*args, **kwargs)
 
     @property
     def boundary_set_url(self):
@@ -66,7 +69,6 @@ class RepresentativeSet(models.Model):
             'related': {
                 'boundary_set_url': self.boundary_set_url,
                 'boundaries_url': self.boundaries_url,
-                'representatives_url': urlresolvers.reverse('representatives_representative_list', kwargs={'set_slug': self.slug})
             }
         }
 
@@ -74,9 +76,8 @@ class RepresentativeSet(models.Model):
     def get_dicts(sets):
         return [s.as_dict() for s in sets]
 
-    @models.permalink
     def get_absolute_url(self):
-        return 'representatives_representative_set_detail', [], {'slug': self.slug}
+        raise NotImplementedError
 
     def get_list_of_boundaries(self):
         if not self.boundary_set:
@@ -99,6 +100,11 @@ class RepresentativeSet(models.Model):
         self.save()
         return self.last_scrape_successful
 
+    def create_child(self):
+        """Should create an unsaved instance of a Candidate or Representative
+        object belonging to this set."""
+        raise NotImplementedError
+
     @transaction.commit_on_success
     def update_from_scraperwiki(self):
 
@@ -114,7 +120,7 @@ class RepresentativeSet(models.Model):
         data = json.load(urllib2.urlopen(api_url))
 
         # Delete existing data
-        self.representative_set.all().delete()
+        self.individuals.all().delete()
 
         boundaries = self.get_list_of_boundaries()
         boundary_names = dict((
@@ -164,7 +170,7 @@ class RepresentativeSet(models.Model):
                 return s
 
         for source_rep in data:
-            rep = Representative(representative_set=self)
+            rep = self.create_child()
             for fieldname in ('name', 'district_name', 'elected_office', 'source_url', 'first_name', 'last_name',
                         'party_name', 'email', 'url', 'personal_url', 'photo_url', 'district_id',
                         'gender'):
@@ -214,9 +220,40 @@ class RepresentativeSet(models.Model):
         return len(data)
 
 
+class RepresentativeSet(BaseRepresentativeSet):
+
+    def create_child(self):
+        return Representative(representative_set=self)
+
+    def get_absolute_url(self):
+        return urlresolvers.reverse('representatives_representative_set_detail',
+            kwargs={'slug': self.slug})
+
+    def as_dict(self):
+        r = super(RepresentativeSet, self).as_dict()
+        r['related']['representatives_url'] = urlresolvers.reverse(
+            'representatives_representative_list', kwargs={'set_slug': self.slug})
+        return r
+
+
+class CandidateSet(BaseRepresentativeSet):
+    election_date = models.DateField()
+
+    def create_child(self):
+        return Candidate(candidate_set=self)
+
+    def get_absolute_url(self):
+        return urlresolvers.reverse('representatives_candidate_set_detail',
+            kwargs={'slug': self.slug})
+
+    def as_dict(self):
+        r = super(CandidateSet, self).as_dict()
+        r['related']['candidates_url'] = urlresolvers.reverse(
+            'representatives_candidate_list', kwargs={'set_slug': self.slug})
+        return r
+
     
-class Representative(models.Model):
-    representative_set = models.ForeignKey(RepresentativeSet)
+class BaseRepresentative(models.Model):
     
     name = models.CharField(max_length=300)
     district_name = models.CharField(max_length=300)
@@ -240,21 +277,20 @@ class Representative(models.Model):
     
     offices = JSONField(blank=True)
     extra = JSONField(blank=True)
+
+    class Meta:
+        abstract = True
     
     def __unicode__(self):
-        return "%s (%s for %s in %s)" % (
-            self.name, self.elected_office, self.district_name, self.representative_set)
+        return "%s (%s for %s)" % (
+            self.name, self.elected_office, self.district_name)
 
     def save(self, *args, **kwargs):
         if not self.offices:
             self.offices = []
         if not self.extra:
             self.extra = {}
-        super(Representative, self).save(*args, **kwargs)
-
-    @property
-    def representative_set_name(self):
-        return self.representative_set.name
+        super(BaseRepresentative, self).save(*args, **kwargs)
 
     @property
     def boundary_url(self):
@@ -264,9 +300,12 @@ class Representative(models.Model):
         r = dict( ( (f, getattr(self, f)) for f in
             ('name', 'district_name', 'elected_office', 'source_url',
             'first_name', 'last_name', 'party_name', 'email', 'url', 'personal_url',
-            'photo_url', 'gender', 'offices', 'extra', 'representative_set_name') ) )
+            'photo_url', 'gender', 'offices', 'extra') ) )
+        set_name = self.__class__.__name__.lower() + '_set'
+        set_obj = getattr(self, set_name)
+        r[set_name + '__name'] = set_obj.name
         r['related'] = {
-            'representative_set_url': self.representative_set.get_absolute_url()
+            set_name + '_url': set_obj.get_absolute_url()
         }
         if self.boundary_url:
             r['related']['boundary_url'] = self.boundary_url
@@ -275,6 +314,15 @@ class Representative(models.Model):
     @staticmethod
     def get_dicts(reps):
         return [ rep.as_dict() for rep in reps ]
+
+
+class Representative(BaseRepresentative):
+    representative_set = models.ForeignKey(RepresentativeSet, related_name='individuals')
+
+
+class Candidate(BaseRepresentative):
+    candidate_set = models.ForeignKey(CandidateSet, related_name='individuals')
+
 
 def _check_boundary_validity(boundary_url):
     """Check that a given boundary URL matches a boundary on the web service."""

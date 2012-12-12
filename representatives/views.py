@@ -6,7 +6,8 @@ from django.utils import simplejson as json
 from boundaries.base_views import ModelListView, ModelDetailView, BadRequest
 from boundaries.models import Boundary
 
-from representatives.models import Representative, RepresentativeSet, app_settings
+from representatives.models import (Representative, RepresentativeSet, app_settings,
+    Candidate, CandidateSet)
 from representatives.utils import boundary_url_to_name
 
 # Oh dear! We're monkey-patching Boundary.as_dict
@@ -22,13 +23,14 @@ class RepresentativeListView(ModelListView):
 
     model = Representative
     filterable_fields = ('name', 'first_name', 'last_name', 'gender', 'district_name', 'elected_office', 'party_name')
+    set_field = 'representative_set'
 
     def get_qs(self, request, district=None, set_slug=None):
         qs = super(RepresentativeListView, self).get_qs(request)
         if district:
             qs = qs.filter(boundary=district)
         elif set_slug:
-            qs = qs.filter(representative_set__slug=set_slug)
+            qs = qs.filter(**{self.set_field + '__slug': set_slug})
         return qs
 
     def filter(self, request, qs):
@@ -57,13 +59,16 @@ class RepresentativeListView(ModelListView):
 
         return qs
 
+
 class RepresentativeSetListView(ModelListView):
 
     model = RepresentativeSet
+    set_field = 'representative_set'
 
     def get_qs(self, request):
         qs = super(RepresentativeSetListView, self).get_qs(request)
-        return qs.select_related('representative_set')
+        return qs.select_related(self.set_field)
+
 
 class RepresentativeSetDetailView(ModelDetailView):
 
@@ -71,3 +76,17 @@ class RepresentativeSetDetailView(ModelDetailView):
 
     def get_object(self, request, qs, slug):
         return qs.get(slug=slug)
+
+
+class CandidateListView(RepresentativeListView):
+    model = Candidate
+    set_field = 'candidate_set'
+
+
+class CandidateSetListView(RepresentativeSetListView):
+    model = CandidateSet
+    set_field = 'candidate_set'
+
+
+class CandidateSetDetailView(RepresentativeSetDetailView):
+    model = CandidateSet
