@@ -304,7 +304,7 @@ class BaseRepresentative(models.Model):
             'photo_url', 'gender', 'offices', 'extra') ) )
         set_name = self.__class__.__name__.lower() + '_set'
         set_obj = getattr(self, set_name)
-        r[set_name + '__name'] = set_obj.name
+        r[set_name + '_name'] = set_obj.name
         r['related'] = {
             set_name + '_url': set_obj.get_absolute_url()
         }
