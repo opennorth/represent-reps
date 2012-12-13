@@ -40,7 +40,8 @@ class Migration(SchemaMigration):
             ('gender', self.gf('django.db.models.fields.CharField')(max_length=1, blank=True)),
             ('offices', self.gf('jsonfield.fields.JSONField')(blank=True)),
             ('extra', self.gf('jsonfield.fields.JSONField')(blank=True)),
-            ('candidate_set', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['representatives.CandidateSet'])),
+            ('candidate_set', self.gf('django.db.models.fields.related.ForeignKey')(related_name='individuals', to=orm['representatives.CandidateSet'])),
+            ('incumbent', self.gf('django.db.models.fields.NullBooleanField')(null=True, blank=True)),
         ))
         db.send_create_signal('representatives', ['Candidate'])
 
@@ -58,7 +59,7 @@ class Migration(SchemaMigration):
         'representatives.candidate': {
             'Meta': {'object_name': 'Candidate'},
             'boundary': ('django.db.models.fields.CharField', [], {'db_index': 'True', 'max_length': '300', 'blank': 'True'}),
-            'candidate_set': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['representatives.CandidateSet']"}),
+            'candidate_set': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'individuals'", 'to': "orm['representatives.CandidateSet']"}),
             'district_id': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'district_name': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
             'elected_office': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
@@ -67,6 +68,7 @@ class Migration(SchemaMigration):
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '1', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'incumbent': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
             'offices': ('jsonfield.fields.JSONField', [], {'blank': 'True'}),
@@ -104,7 +106,7 @@ class Migration(SchemaMigration):
             'party_name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'personal_url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
             'photo_url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
-            'representative_set': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['representatives.RepresentativeSet']"}),
+            'representative_set': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'individuals'", 'to': "orm['representatives.RepresentativeSet']"}),
             'source_url': ('django.db.models.fields.URLField', [], {'max_length': '200'}),
             'url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
         },

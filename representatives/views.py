@@ -81,6 +81,7 @@ class RepresentativeSetDetailView(ModelDetailView):
 class CandidateListView(RepresentativeListView):
     model = Candidate
     set_field = 'candidate_set'
+    filterable_fields = RepresentativeListView.filterable_fields + ('incumbent',)
 
 
 class CandidateSetListView(RepresentativeSetListView):

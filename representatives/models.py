@@ -195,6 +195,12 @@ class BaseRepresentativeSet(models.Model):
                                     elif d[k] is None:
                                         del d[k]
 
+            incumbent = unicode(source_rep.get('incumbent')).lower()
+            if incumbent in ('1', 'true', 'yes', 'y'):
+                rep.incumbent = True
+            elif incumbent in ('0', 'false', 'no', 'n'):
+                rep.incumbent = False
+
             if not source_rep.get('name'):
                 rep.name = ' '.join(filter(None, [source_rep.get('first_name'), source_rep.get('last_name')]))
             rep.name = strip_honorific(rep.name)
@@ -323,6 +329,12 @@ class Representative(BaseRepresentative):
 
 class Candidate(BaseRepresentative):
     candidate_set = models.ForeignKey(CandidateSet, related_name='individuals')
+    incumbent = models.NullBooleanField(blank=True)
+
+    def as_dict(self):
+        r = super(Candidate, self).as_dict()
+        r['incumbent'] = self.incumbent
+        return r
 
 
 def _check_boundary_validity(boundary_url):
