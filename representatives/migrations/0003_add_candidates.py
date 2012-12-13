@@ -17,6 +17,7 @@ class Migration(SchemaMigration):
             ('last_scrape_successful', self.gf('django.db.models.fields.NullBooleanField')(null=True, blank=True)),
             ('boundary_set', self.gf('django.db.models.fields.CharField')(max_length=300, blank=True)),
             ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=300, db_index=True)),
+            ('enabled', self.gf('django.db.models.fields.BooleanField')(default=True, db_index=True)),
             ('election_date', self.gf('django.db.models.fields.DateField')()),
         ))
         db.send_create_signal('representatives', ['CandidateSet'])
@@ -45,6 +46,9 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal('representatives', ['Candidate'])
 
+        # Adding field 'RepresentativeSet.enabled'
+        db.add_column('representatives_representativeset', 'enabled', self.gf('django.db.models.fields.BooleanField')(default=True, db_index=True), keep_default=False)
+
 
     def backwards(self, orm):
         
@@ -53,6 +57,9 @@ class Migration(SchemaMigration):
 
         # Deleting model 'Candidate'
         db.delete_table('representatives_candidate')
+
+        # Deleting field 'RepresentativeSet.enabled'
+        db.delete_column('representatives_representativeset', 'enabled')
 
 
     models = {
@@ -82,6 +89,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'CandidateSet'},
             'boundary_set': ('django.db.models.fields.CharField', [], {'max_length': '300', 'blank': 'True'}),
             'election_date': ('django.db.models.fields.DateField', [], {}),
+            'enabled': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'db_index': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_scrape_successful': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
             'last_scrape_time': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
@@ -113,6 +121,7 @@ class Migration(SchemaMigration):
         'representatives.representativeset': {
             'Meta': {'object_name': 'RepresentativeSet'},
             'boundary_set': ('django.db.models.fields.CharField', [], {'max_length': '300', 'blank': 'True'}),
+            'enabled': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'db_index': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_scrape_successful': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'}),
             'last_scrape_time': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),

@@ -5,8 +5,8 @@ from representatives.models import *
 class RepresentativeSetAdmin(admin.ModelAdmin):
 
     actions = ['update_from_scraperwiki']
-    list_display = ['name', 'last_scrape_time', 'last_scrape_successful']
-    list_filter = ['last_scrape_successful']
+    list_display = ['name', 'last_scrape_time', 'last_scrape_successful', 'enabled']
+    list_filter = ['last_scrape_successful', 'enabled']
 
     def update_from_scraperwiki(self, request, queryset):
         for rset in queryset:
@@ -34,5 +34,6 @@ class CandidateAdmin(admin.ModelAdmin):
     
 admin.site.register(Representative, RepresentativeAdmin)
 admin.site.register(RepresentativeSet, RepresentativeSetAdmin)
-admin.site.register(Candidate, CandidateAdmin)
-admin.site.register(CandidateSet, RepresentativeSetAdmin)
+if app_settings.ENABLE_CANDIDATES:
+    admin.site.register(Candidate, CandidateAdmin)
+    admin.site.register(CandidateSet, RepresentativeSetAdmin)

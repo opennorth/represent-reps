@@ -1,4 +1,5 @@
 # coding: utf-8
+import datetime
 import json
 import re
 import urllib, urllib2
@@ -26,6 +27,13 @@ class MyAppConf(AppConf):
     # ?point=lat,lng queries. If True, makes an HTTP request to BOUNDARYSERVICE_URL
     RESOLVE_POINT_REQUESTS_OVER_HTTP = False
 
+    # Set to true (in REPRESENT_ENABLE_CANDIDATES in settings.py) to enable
+    # Candidate and CandidateSet endpoints.
+    ENABLE_CANDIDATES = False
+    # If an update is triggered 5 or more days after the election date, disable
+    # the CandidateSet.
+    DISABLE_CANDIDATES_AFTER_ELECTION = 5
+
 app_settings = MyAppConf()
 
 class BaseRepresentativeSet(models.Model):
@@ -37,6 +45,7 @@ class BaseRepresentativeSet(models.Model):
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
     slug = models.SlugField(max_length=300, unique=True, db_index=True, editable=False)
+    enabled = models.BooleanField(default=True, blank=True, db_index=True)
 
     class Meta:
         abstract = True
@@ -258,6 +267,18 @@ class CandidateSet(BaseRepresentativeSet):
         r['related']['candidates_url'] = urlresolvers.reverse(
             'representatives_candidate_list', kwargs={'set_slug': self.slug})
         return r
+
+    def update_scrape_status(self):
+        # Disable CandidateSet if the election has passed
+        if (app_settings.DISABLE_CANDIDATES_AFTER_ELECTION is not False
+                and self.election_date
+                and datetime.date.today() - self.election_date > datetime.timedelta(
+                    days=app_settings.DISABLE_CANDIDATES_AFTER_ELECTION)):
+            self.enabled = False
+            self.save()
+            self.individuals.all().delete()
+            return False
+        return super(CandidateSet, self).update_scrape_status()
 
     
 class BaseRepresentative(models.Model):

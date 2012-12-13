@@ -67,7 +67,7 @@ class RepresentativeSetListView(ModelListView):
 
     def get_qs(self, request):
         qs = super(RepresentativeSetListView, self).get_qs(request)
-        return qs.select_related(self.set_field)
+        return qs.filter(enabled=True).select_related(self.set_field)
 
 
 class RepresentativeSetDetailView(ModelDetailView):
