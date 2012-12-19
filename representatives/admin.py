@@ -28,12 +28,12 @@ class RepresentativeAdmin(admin.ModelAdmin):
     search_fields = ['name', 'district_name', 'elected_office']
 
 class CandidateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'candidate_set', 'district_name', 'elected_office', 'boundary']
-    list_filter = ['candidate_set']
+    list_display = ['name', 'election', 'district_name', 'elected_office', 'boundary']
+    list_filter = ['election']
     search_fields = ['name', 'district_name', 'elected_office']    
     
 admin.site.register(Representative, RepresentativeAdmin)
 admin.site.register(RepresentativeSet, RepresentativeSetAdmin)
 if app_settings.ENABLE_CANDIDATES:
     admin.site.register(Candidate, CandidateAdmin)
-    admin.site.register(CandidateSet, RepresentativeSetAdmin)
+    admin.site.register(Election, RepresentativeSetAdmin)

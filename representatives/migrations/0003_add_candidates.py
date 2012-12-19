@@ -8,8 +8,8 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         
-        # Adding model 'CandidateSet'
-        db.create_table('representatives_candidateset', (
+        # Adding model 'Election'
+        db.create_table('representatives_election', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=300)),
             ('scraperwiki_name', self.gf('django.db.models.fields.CharField')(max_length=100)),
@@ -20,7 +20,7 @@ class Migration(SchemaMigration):
             ('enabled', self.gf('django.db.models.fields.BooleanField')(default=True, db_index=True)),
             ('election_date', self.gf('django.db.models.fields.DateField')()),
         ))
-        db.send_create_signal('representatives', ['CandidateSet'])
+        db.send_create_signal('representatives', ['Election'])
 
         # Adding model 'Candidate'
         db.create_table('representatives_candidate', (
@@ -41,7 +41,7 @@ class Migration(SchemaMigration):
             ('gender', self.gf('django.db.models.fields.CharField')(max_length=1, blank=True)),
             ('offices', self.gf('jsonfield.fields.JSONField')(blank=True)),
             ('extra', self.gf('jsonfield.fields.JSONField')(blank=True)),
-            ('candidate_set', self.gf('django.db.models.fields.related.ForeignKey')(related_name='individuals', to=orm['representatives.CandidateSet'])),
+            ('election', self.gf('django.db.models.fields.related.ForeignKey')(related_name='individuals', to=orm['representatives.Election'])),
             ('incumbent', self.gf('django.db.models.fields.NullBooleanField')(null=True, blank=True)),
         ))
         db.send_create_signal('representatives', ['Candidate'])
@@ -52,8 +52,8 @@ class Migration(SchemaMigration):
 
     def backwards(self, orm):
         
-        # Deleting model 'CandidateSet'
-        db.delete_table('representatives_candidateset')
+        # Deleting model 'Election'
+        db.delete_table('representatives_election')
 
         # Deleting model 'Candidate'
         db.delete_table('representatives_candidate')
@@ -66,10 +66,10 @@ class Migration(SchemaMigration):
         'representatives.candidate': {
             'Meta': {'object_name': 'Candidate'},
             'boundary': ('django.db.models.fields.CharField', [], {'db_index': 'True', 'max_length': '300', 'blank': 'True'}),
-            'candidate_set': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'individuals'", 'to': "orm['representatives.CandidateSet']"}),
             'district_id': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'district_name': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
             'elected_office': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
+            'election': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'individuals'", 'to': "orm['representatives.Election']"}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'extra': ('jsonfield.fields.JSONField', [], {'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
@@ -85,8 +85,8 @@ class Migration(SchemaMigration):
             'source_url': ('django.db.models.fields.URLField', [], {'max_length': '200'}),
             'url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
         },
-        'representatives.candidateset': {
-            'Meta': {'object_name': 'CandidateSet'},
+        'representatives.election': {
+            'Meta': {'object_name': 'Election'},
             'boundary_set': ('django.db.models.fields.CharField', [], {'max_length': '300', 'blank': 'True'}),
             'election_date': ('django.db.models.fields.DateField', [], {}),
             'enabled': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'db_index': 'True'}),

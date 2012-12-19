@@ -28,10 +28,10 @@ class MyAppConf(AppConf):
     RESOLVE_POINT_REQUESTS_OVER_HTTP = False
 
     # Set to true (in REPRESENT_ENABLE_CANDIDATES in settings.py) to enable
-    # Candidate and CandidateSet endpoints.
+    # Candidate and Election endpoints.
     ENABLE_CANDIDATES = False
     # If an update is triggered 5 or more days after the election date, disable
-    # the CandidateSet.
+    # the Election.
     DISABLE_CANDIDATES_AFTER_ELECTION = 5
 
 app_settings = MyAppConf()
@@ -251,25 +251,25 @@ class RepresentativeSet(BaseRepresentativeSet):
         return r
 
 
-class CandidateSet(BaseRepresentativeSet):
+class Election(BaseRepresentativeSet):
     election_date = models.DateField()
 
     def create_child(self):
-        return Candidate(candidate_set=self)
+        return Candidate(election=self)
 
     def get_absolute_url(self):
-        return urlresolvers.reverse('representatives_candidate_set_detail',
+        return urlresolvers.reverse('representatives_election_detail',
             kwargs={'slug': self.slug})
 
     def as_dict(self):
-        r = super(CandidateSet, self).as_dict()
+        r = super(Election, self).as_dict()
         r['election_date'] = unicode(self.election_date) if self.election_date else None
         r['related']['candidates_url'] = urlresolvers.reverse(
             'representatives_candidate_list', kwargs={'set_slug': self.slug})
         return r
 
     def update_scrape_status(self):
-        # Disable CandidateSet if the election has passed
+        # Disable Election if the date has passed
         if (app_settings.DISABLE_CANDIDATES_AFTER_ELECTION is not False
                 and self.election_date
                 and datetime.date.today() - self.election_date > datetime.timedelta(
@@ -278,7 +278,7 @@ class CandidateSet(BaseRepresentativeSet):
             self.save()
             self.individuals.all().delete()
             return False
-        return super(CandidateSet, self).update_scrape_status()
+        return super(Election, self).update_scrape_status()
 
     
 class BaseRepresentative(models.Model):
@@ -329,11 +329,10 @@ class BaseRepresentative(models.Model):
             ('name', 'district_name', 'elected_office', 'source_url',
             'first_name', 'last_name', 'party_name', 'email', 'url', 'personal_url',
             'photo_url', 'gender', 'offices', 'extra') ) )
-        set_name = self.__class__.__name__.lower() + '_set'
-        set_obj = getattr(self, set_name)
-        r[set_name + '_name'] = set_obj.name
+        set_obj = getattr(self, self.set_name)
+        r[self.set_name + '_name'] = set_obj.name
         r['related'] = {
-            set_name + '_url': set_obj.get_absolute_url()
+            self.set_name + '_url': set_obj.get_absolute_url()
         }
         if self.boundary_url:
             r['related']['boundary_url'] = self.boundary_url
@@ -346,11 +345,13 @@ class BaseRepresentative(models.Model):
 
 class Representative(BaseRepresentative):
     representative_set = models.ForeignKey(RepresentativeSet, related_name='individuals')
+    set_name = 'representative_set'
 
 
 class Candidate(BaseRepresentative):
-    candidate_set = models.ForeignKey(CandidateSet, related_name='individuals')
+    election = models.ForeignKey(Election, related_name='individuals')
     incumbent = models.NullBooleanField(blank=True)
+    set_name = 'election'
 
     def as_dict(self):
         r = super(Candidate, self).as_dict()

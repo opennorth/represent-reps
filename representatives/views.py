@@ -7,7 +7,7 @@ from boundaries.base_views import ModelListView, ModelDetailView, BadRequest
 from boundaries.models import Boundary
 
 from representatives.models import (Representative, RepresentativeSet, app_settings,
-    Candidate, CandidateSet)
+    Candidate, Election)
 from representatives.utils import boundary_url_to_name
 
 # Oh dear! We're monkey-patching Boundary.as_dict
@@ -23,15 +23,14 @@ class RepresentativeListView(ModelListView):
 
     model = Representative
     filterable_fields = ('name', 'first_name', 'last_name', 'gender', 'district_name', 'elected_office', 'party_name')
-    set_field = 'representative_set'
 
     def get_qs(self, request, district=None, set_slug=None):
         qs = super(RepresentativeListView, self).get_qs(request)
         if district:
             qs = qs.filter(boundary=district)
         elif set_slug:
-            qs = qs.filter(**{self.set_field + '__slug': set_slug})
-        return qs
+            qs = qs.filter(**{self.model.set_name + '__slug': set_slug})
+        return qs.select_related(self.model.set_name)
 
     def filter(self, request, qs):
         qs = super(RepresentativeListView, self).filter(request, qs)
@@ -63,11 +62,10 @@ class RepresentativeListView(ModelListView):
 class RepresentativeSetListView(ModelListView):
 
     model = RepresentativeSet
-    set_field = 'representative_set'
 
     def get_qs(self, request):
         qs = super(RepresentativeSetListView, self).get_qs(request)
-        return qs.filter(enabled=True).select_related(self.set_field)
+        return qs.filter(enabled=True)
 
 
 class RepresentativeSetDetailView(ModelDetailView):
@@ -80,14 +78,12 @@ class RepresentativeSetDetailView(ModelDetailView):
 
 class CandidateListView(RepresentativeListView):
     model = Candidate
-    set_field = 'candidate_set'
     filterable_fields = RepresentativeListView.filterable_fields + ('incumbent',)
 
 
-class CandidateSetListView(RepresentativeSetListView):
-    model = CandidateSet
-    set_field = 'candidate_set'
+class ElectionListView(RepresentativeSetListView):
+    model = Election
 
 
-class CandidateSetDetailView(RepresentativeSetDetailView):
-    model = CandidateSet
+class ElectionDetailView(RepresentativeSetDetailView):
+    model = Election
