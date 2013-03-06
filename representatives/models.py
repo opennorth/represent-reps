@@ -128,6 +128,10 @@ class BaseRepresentativeSet(models.Model):
         })
         data = json.load(urllib2.urlopen(api_url))
 
+        if not (isinstance(data, list) and data):
+            # No data, don't try an update
+            return False
+
         # Delete existing data
         self.individuals.all().delete()
 
