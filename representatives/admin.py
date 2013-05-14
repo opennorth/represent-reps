@@ -5,7 +5,7 @@ from representatives.models import *
 class RepresentativeSetAdmin(admin.ModelAdmin):
 
     actions = ['update_from_scraperwiki']
-    list_display = ['name', 'last_scrape_time', 'last_scrape_successful', 'enabled']
+    list_display = ['name', 'last_import_time', 'last_scrape_time', 'last_scrape_successful', 'enabled']
     list_filter = ['last_scrape_successful', 'enabled']
 
     def update_from_scraperwiki(self, request, queryset):

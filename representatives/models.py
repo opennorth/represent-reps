@@ -41,6 +41,7 @@ class BaseRepresentativeSet(models.Model):
         help_text="The name of the political body, e.g. BC Legislature")
     scraperwiki_name = models.CharField(max_length=100)
     last_scrape_time = models.DateTimeField(blank=True, null=True)
+    last_import_time = models.DateTimeField(blank=True, null=True)
     last_scrape_successful = models.NullBooleanField(blank=True, null=True)
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
@@ -242,6 +243,8 @@ class BaseRepresentativeSet(models.Model):
                 rep.boundary = boundary_url_to_name(boundary_url)
             rep.save()
 
+        self.last_import_time = datetime.datetime.now()
+        self.save()
         return len(data)
 
 
