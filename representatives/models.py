@@ -92,8 +92,14 @@ class BaseRepresentativeSet(models.Model):
         if not self.boundary_set:
             return {}
         set_url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/' + self.boundary_set + '/?limit=0'
-        set_data = json.load(urllib2.urlopen(set_url))
-        return set_data['objects']
+        boundaries = []
+        while set_url:
+            set_data = json.load(urllib2.urlopen(set_url))
+            boundaries.extend(set_data['objects'])
+            if set_data['meta'].get('next'):
+                set_url = urljoin(app_settings.BOUNDARYSERVICE_URL, set_data['meta']['next'])
+            else:
+                return boundaries
 
     def update_scrape_status(self):
         """Checks from Scraperwiki whether the last scrape was successful."""
