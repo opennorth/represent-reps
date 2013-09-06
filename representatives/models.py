@@ -38,7 +38,8 @@ app_settings = MyAppConf()
 
 class BaseRepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
-        help_text="The name of the political body, e.g. BC Legislature")
+        help_text="The name of the political body, e.g. BC Legislature",
+        unique=True)
     scraperwiki_name = models.CharField(max_length=100)
     last_scrape_time = models.DateTimeField(blank=True, null=True)
     last_import_time = models.DateTimeField(blank=True, null=True)
