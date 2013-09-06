@@ -199,7 +199,10 @@ class BaseRepresentativeSet(models.Model):
                     setattr(rep, fieldname, clean_string(source_rep[fieldname]))
             for json_fieldname in ('offices', 'extra'):
                 if source_rep.get(json_fieldname):
-                    setattr(rep, json_fieldname, json.loads(source_rep.get(json_fieldname)))
+                    try:
+                        setattr(rep, json_fieldname, json.loads(source_rep.get(json_fieldname)))
+                    except ValueError:
+                        raise Exception(u"Invalid JSON in %s: %s" % (json_fieldname, source_rep.get(json_fieldname)))
                     if isinstance(getattr(rep, json_fieldname), list):
                         for d in getattr(rep, json_fieldname):
                             if isinstance(d, dict):

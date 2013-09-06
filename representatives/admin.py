@@ -10,7 +10,11 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
 
     def update_from_scraperwiki(self, request, queryset):
         for rset in queryset:
-            num_updated = rset.update_from_scraperwiki()
+            try:
+                num_updated = rset.update_from_scraperwiki()
+            except Exception as e:
+                messages.error(request, u"Fatal error updating %s: %s" % (rset, e))
+                continue
             if num_updated is False:
                 messages.error(request, "%s could not be updated." % rset)
             else:
