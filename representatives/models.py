@@ -3,7 +3,7 @@ import datetime
 import json
 import re
 import urllib, urllib2
-from urlparse import urljoin
+from urlparse import urljoin, urlparse, parse_qsl
 
 from django.core import urlresolvers
 from django.db import models, transaction
@@ -104,12 +104,28 @@ class BaseRepresentativeSet(models.Model):
         object belonging to this set."""
         raise NotImplementedError
 
+    def check_scraperwiki_status(self):
+        scraperwiki_name = dict(parse_qsl(urlparse(self.data_url).query))['name']
+
+        api_url = urljoin('https://api.scraperwiki.com/api/1.0/',
+            'scraper/getruninfo') + '?' + urllib.urlencode({
+                'format': 'jsondict',
+                'name': scraperwiki_name
+            })
+        data = json.load(urllib2.urlopen(api_url))
+
+        return not bool(data[0].get('exception_message'))
+
     @transaction.commit_on_success
     def update_from_data_source(self):
         data = json.load(urllib2.urlopen(self.data_url))
 
-        if not (isinstance(data, list) and data):
-            # No data, don't try an update
+        if (
+                # Scraperwiki scrape failed
+                (self.data_url.startswith('https://api.scraperwiki') and not self.check_scraperwiki_status())
+                # No daa
+                or not (isinstance(data, list) and data)):
+            # Don't try an update
             self.last_import_successful = False
             self.save()
             return False
