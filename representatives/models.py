@@ -20,7 +20,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 class MyAppConf(AppConf):
-    SCRAPERWIKI_API_URL = 'https://api.scraperwiki.com/api/1.0/'
     BOUNDARYSERVICE_URL = 'http://represent.opennorth.ca/'
 
     # If False, makes a direct database query on the Boundary model for
@@ -40,10 +39,10 @@ class BaseRepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
         help_text="The name of the political body, e.g. BC Legislature",
         unique=True)
-    scraperwiki_name = models.CharField(max_length=100)
-    last_scrape_time = models.DateTimeField(blank=True, null=True)
+    data_url = models.URLField(help_text="URL to a JSON array of representatives within this set")
+    data_about_url = models.URLField(blank=True, help_text="URL to information about the scraper used to gather data")
     last_import_time = models.DateTimeField(blank=True, null=True)
-    last_scrape_successful = models.NullBooleanField(blank=True, null=True)
+    last_import_successful = models.NullBooleanField(blank=True, null=True)
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
     slug = models.SlugField(max_length=300, unique=True, db_index=True, editable=False)
@@ -68,15 +67,12 @@ class BaseRepresentativeSet(models.Model):
     def boundaries_url(self):
         return u'/boundaries/%s/' % self.boundary_set if self.boundary_set else ''
 
-    @property
-    def scraperwiki_url(self):
-        return u'https://scraperwiki.com/scrapers/%s/' % self.scraperwiki_name
-
     def as_dict(self):
         return {
             'name': self.name,
             'url': self.get_absolute_url(),
-            'scraperwiki_url': self.scraperwiki_url,
+            'data_url': self.data_url,
+            'data_about_url': self.data_about_url,
             'related': {
                 'boundary_set_url': self.boundary_set_url,
                 'boundaries_url': self.boundaries_url,
@@ -103,41 +99,19 @@ class BaseRepresentativeSet(models.Model):
             else:
                 return boundaries
 
-    def update_scrape_status(self):
-        """Checks from Scraperwiki whether the last scrape was successful."""
-        api_url = urljoin(app_settings.SCRAPERWIKI_API_URL,
-            'scraper/getruninfo') + '?' + urllib.urlencode({
-                'format': 'jsondict',
-                'name': self.scraperwiki_name
-            })
-        data = json.load(urllib2.urlopen(api_url))
-
-        self.last_scrape_time = dateutil.parser.parse(data[0]['run_ended'])
-        self.last_scrape_successful = not bool(data[0].get('exception_message'))
-        self.save()
-        return self.last_scrape_successful
-
     def create_child(self):
         """Should create an unsaved instance of a Candidate or Representative
         object belonging to this set."""
         raise NotImplementedError
 
     @transaction.commit_on_success
-    def update_from_scraperwiki(self):
-
-        if not self.update_scrape_status():
-            # Don't update data if the scraper threw an exception on the last run
-            return False
-
-        api_url = urljoin(app_settings.SCRAPERWIKI_API_URL, 'datastore/sqlite') + '?' + urllib.urlencode({
-            'format': 'jsondict',
-            'name': self.scraperwiki_name,
-            'query': 'select * from swdata'
-        })
-        data = json.load(urllib2.urlopen(api_url))
+    def update_from_data_source(self):
+        data = json.load(urllib2.urlopen(self.data_url))
 
         if not (isinstance(data, list) and data):
             # No data, don't try an update
+            self.last_import_successful = False
+            self.save()
             return False
 
         # Delete existing data
@@ -248,6 +222,7 @@ class BaseRepresentativeSet(models.Model):
             rep.save()
 
         self.last_import_time = datetime.datetime.now()
+        self.last_import_successful = True
         self.save()
         return len(data)
 
@@ -285,7 +260,7 @@ class Election(BaseRepresentativeSet):
             'representatives_candidate_list', kwargs={'set_slug': self.slug})
         return r
 
-    def update_scrape_status(self):
+    def update_from_data_source(self):
         # Disable Election if the date has passed
         if (app_settings.DISABLE_CANDIDATES_AFTER_ELECTION is not False
                 and self.election_date
@@ -295,7 +270,7 @@ class Election(BaseRepresentativeSet):
             self.save()
             self.individuals.all().delete()
             return False
-        return super(Election, self).update_scrape_status()
+        return super(Election, self).update_from_data_source()
 
     
 class BaseRepresentative(models.Model):

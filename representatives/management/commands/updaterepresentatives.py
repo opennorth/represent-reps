@@ -12,5 +12,5 @@ class Command(BaseCommand):
         from representatives.models import RepresentativeSet, Election
 
         for rs in itertools.chain(
-                RepresentativeSet.objects.all(), Election.objects.all()):
-            rs.update_from_scraperwiki()
+                RepresentativeSet.objects.filter(enabled=True), Election.objects.filter(enabled=True)):
+            rs.update_from_data_source()

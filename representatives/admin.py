@@ -4,14 +4,14 @@ from representatives.models import *
 
 class RepresentativeSetAdmin(admin.ModelAdmin):
 
-    actions = ['update_from_scraperwiki']
-    list_display = ['name', 'last_import_time', 'last_scrape_time', 'last_scrape_successful', 'enabled']
-    list_filter = ['last_scrape_successful', 'enabled']
+    actions = ['update_from_data_source']
+    list_display = ['name', 'last_import_time', 'last_import_successful', 'enabled']
+    list_filter = ['last_import_successful', 'enabled']
 
-    def update_from_scraperwiki(self, request, queryset):
+    def update_from_data_source(self, request, queryset):
         for rset in queryset:
             try:
-                num_updated = rset.update_from_scraperwiki()
+                num_updated = rset.update_from_data_source()
             except Exception as e:
                 messages.error(request, u"Fatal error updating %s: %s" % (rset, e))
                 continue
@@ -24,7 +24,7 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
                     messages.warning(request, msg + " %s did not match a boundary." % no_boundaries)
                 else:
                     messages.success(request, msg + " All matched a boundary.")
-    update_from_scraperwiki.short_description = "Update from ScraperWiki"
+    update_from_data_source.short_description = "Update from data source"
     
 class RepresentativeAdmin(admin.ModelAdmin):
     list_display = ['name', 'representative_set', 'district_name', 'elected_office', 'boundary']
