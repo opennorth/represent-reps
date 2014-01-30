@@ -23,7 +23,7 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
                 msg = "Updated %s representatives for %s." % (num_updated, rset)
                 no_boundaries = Representative.objects.filter(representative_set=rset, boundary='').count()
                 if no_boundaries:
-                    messages.warning(request, msg + " %s did not match a boundary." % no_boundaries)
+                    messages.warning(request, msg + " %s did not match a boundary (%s)." % (no_boundaries, ', '.join(no_boundaries)))
                 else:
                     messages.success(request, msg + " All matched a boundary.")
     update_from_data_source.short_description = "Update from data source"
