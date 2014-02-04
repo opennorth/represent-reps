@@ -172,11 +172,18 @@ class BaseRepresentativeSet(models.Model):
 
         # @see http://www.noslangues-ourlanguages.gc.ca/bien-well/fra-eng/typographie-typography/telephone-eng.html
         def clean_tel(s):
-            digits = re.sub(r'\D', '', s)
+            splits = re.split(r' (?:x|ext\.?|poste) ?(?=\b|\d)', s)
+            digits = re.sub(r'\D', '', splits[0])
+
             if len(digits) == 10:
                 digits = '1' + digits
-            if len(digits) == 11 and digits[0] == '1':
-                return re.sub(r'\A(\d)(\d{3})(\d{3})(\d{4})\Z', r'\1-\2-\3-\4', digits)
+
+            if len(digits) == 11 and digits[0] == '1' and len(splits) <= 2:
+                digits = re.sub(r'\A(\d)(\d{3})(\d{3})(\d{4})\Z', r'\1-\2-\3-\4', digits)
+                if len(splits) == 2:
+                    return '%s x%s' % (digits, splits[1])
+                else:
+                    return digits
             else:
                 return s
 
