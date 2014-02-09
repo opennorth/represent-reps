@@ -19,6 +19,7 @@ def boundary_url_to_name(s):
     return s
 
 _r_honorific = re.compile(r'^(Hon|Mr|Mrs|Ms)\.?\s')
+# @todo Move to scrapers-ca
 def strip_honorific(s):
     return _r_honorific.sub('', s)
 
