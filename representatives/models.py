@@ -104,6 +104,7 @@ class BaseRepresentativeSet(models.Model):
         object belonging to this set."""
         raise NotImplementedError
 
+    # @todo Remove once all scrapers are in scrapers-ca.
     def check_scraperwiki_status(self):
         scraperwiki_name = dict(parse_qsl(urlparse(self.data_url).query))['name']
 
@@ -122,8 +123,9 @@ class BaseRepresentativeSet(models.Model):
 
         if (
                 # Scraperwiki scrape failed
+                # @todo Remove once all scrapers are in scrapers-ca.
                 (self.data_url.startswith('https://api.scraperwiki') and not self.check_scraperwiki_status())
-                # No daa
+                # No data
                 or not (isinstance(data, list) and data)):
             # Don't try an update
             self.last_import_successful = False
@@ -141,12 +143,13 @@ class BaseRepresentativeSet(models.Model):
             (b.get('external_id'), b['url']) for b in boundaries
         ))
 
+        # @todo Remove once all scrapers are in scrapers-ca.
         _r_whitespace = re.compile(r'[^\S\n]+', flags=re.U)
         # Make all whitespace either newlines or spaces and remove whitespace around newlines.
-        # @todo Move to scrapers-ca
         def clean_string(s):
             return re.sub(r' *\n *', "\n", _r_whitespace.sub(' ', unicode(s)).strip())
 
+        # @todo Remove once all scrapers are in scrapers-ca.
         abbreviations = {
             'British Columbia': 'BC',
             'Alberta': 'AB',
@@ -164,7 +167,6 @@ class BaseRepresentativeSet(models.Model):
             'Nunavut': 'NU',
         }
         # Abbreviates province name, correct postal codes, and formats last line of address.
-        # @todo Move to scrapers-ca
         def clean_address(s):
             # The letter "O" instead of the numeral "0" is a common mistake.
             s = re.sub(r'\b[A-Z][O0-9][A-Z]\s?[O0-9][A-Z][O0-9]\b', lambda x: x.group(0).replace('O', '0'), s)
@@ -172,8 +174,8 @@ class BaseRepresentativeSet(models.Model):
                 s = re.sub(r'[,\n ]+\(?' + k + r'\)?(?=(?:[,\n ]+Canada)?(?:[,\n ]+[A-Z][0-9][A-Z]\s?[0-9][A-Z][0-9])?\Z)', ' ' + v, s)
             return re.sub(r'[,\n ]+([A-Z]{2})(?:[,\n ]+Canada)?[,\n ]+([A-Z][0-9][A-Z])\s?([0-9][A-Z][0-9])\Z', r' \1  \2 \3', s)
 
+        # @todo Remove once all scrapers are in scrapers-ca.
         # @see http://www.noslangues-ourlanguages.gc.ca/bien-well/fra-eng/typographie-typography/telephone-eng.html
-        # @note Is part of scrapers-ca.
         def clean_tel(s):
             splits = re.split(r'[\s-](?:x|ext\.?|poste)[\s-]?(?=\b|\d)', s, flags=re.IGNORECASE)
             digits = re.sub(r'\D', '', splits[0])
