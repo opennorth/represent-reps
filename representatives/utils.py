@@ -18,11 +18,6 @@ def boundary_url_to_name(s):
         return s[:-1]
     return s
 
-# @todo Remove once all scrapers are in scrapers-ca.
-_r_honorific = re.compile(r'^(Hon|Mr|Mrs|Ms)\.?\s')
-def strip_honorific(s):
-    return _r_honorific.sub('', s)
-
 def split_name(n):
     """Given a name, returns (first_name, last_name)."""
     # Very simple implementation currently just splits out the last component.

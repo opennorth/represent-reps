@@ -2,8 +2,8 @@
 import datetime
 import json
 import re
-import urllib, urllib2
-from urlparse import urljoin, urlparse, parse_qsl
+import urllib2
+from urlparse import urljoin
 
 from django.core import urlresolvers
 from django.db import models, transaction
@@ -13,8 +13,7 @@ from appconf import AppConf
 import dateutil.parser
 from jsonfield import JSONField
 
-from representatives.utils import (get_comparison_string, boundary_url_to_name,
-                                   split_name, strip_honorific)
+from representatives.utils import get_comparison_string, boundary_url_to_name, split_name
 
 import logging
 logger = logging.getLogger(__name__)
@@ -104,27 +103,13 @@ class BaseRepresentativeSet(models.Model):
         object belonging to this set."""
         raise NotImplementedError
 
-    # @todo Remove once all scrapers are in scrapers-ca.
-    def check_scraperwiki_status(self):
-        scraperwiki_name = dict(parse_qsl(urlparse(self.data_url).query))['name']
-
-        api_url = urljoin('https://api.scraperwiki.com/api/1.0/',
-            'scraper/getruninfo') + '?' + urllib.urlencode({
-                'format': 'jsondict',
-                'name': scraperwiki_name
-            })
-        data = json.load(urllib2.urlopen(api_url))
-
-        return not bool(data[0].get('exception_message'))
-
     @transaction.commit_on_success
     def update_from_data_source(self):
         data = json.load(urllib2.urlopen(self.data_url))
 
         if (
-                # Scraperwiki scrape failed
-                # @todo Remove once all scrapers are in scrapers-ca.
-                (self.data_url.startswith('https://api.scraperwiki') and not self.check_scraperwiki_status())
+                # @todo Remove once all scrapers are in scrapers-ca. (This prevents imports from ScraperWiki.)
+                self.data_url.startswith('https://api.scraperwiki')
                 # No data
                 or not (isinstance(data, list) and data)):
             # Don't try an update
@@ -143,62 +128,13 @@ class BaseRepresentativeSet(models.Model):
             (b.get('external_id'), b['url']) for b in boundaries
         ))
 
-        # @todo Remove once all scrapers are in scrapers-ca.
-        _r_whitespace = re.compile(r'[^\S\n]+', flags=re.U)
-        # Make all whitespace either newlines or spaces and remove whitespace around newlines.
-        def clean_string(s):
-            return re.sub(r' *\n *', "\n", _r_whitespace.sub(' ', unicode(s)).strip())
-
-        # @todo Remove once all scrapers are in scrapers-ca.
-        abbreviations = {
-            'British Columbia': 'BC',
-            'Alberta': 'AB',
-            'Saskatchewan': 'SK',
-            'Manitoba': 'MB',
-            'Ontario': 'ON',
-            u'Québec': 'QC',
-            'New Brunswick': 'NB',
-            'PEI': 'PE',
-            'Prince Edward Island': 'PE',
-            'Nova Scotia': 'NS',
-            'Newfoundland and Labrador': 'NL',
-            'Yukon': 'YT',
-            'Northwest Territories': 'NT',
-            'Nunavut': 'NU',
-        }
-        # Abbreviates province name, correct postal codes, and formats last line of address.
-        def clean_address(s):
-            # The letter "O" instead of the numeral "0" is a common mistake.
-            s = re.sub(r'\b[A-Z][O0-9][A-Z]\s?[O0-9][A-Z][O0-9]\b', lambda x: x.group(0).replace('O', '0'), s)
-            for k, v in abbreviations.iteritems():
-                s = re.sub(r'[,\n ]+\(?' + k + r'\)?(?=(?:[,\n ]+Canada)?(?:[,\n ]+[A-Z][0-9][A-Z]\s?[0-9][A-Z][0-9])?\Z)', ' ' + v, s)
-            return re.sub(r'[,\n ]+([A-Z]{2})(?:[,\n ]+Canada)?[,\n ]+([A-Z][0-9][A-Z])\s?([0-9][A-Z][0-9])\Z', r' \1  \2 \3', s)
-
-        # @todo Remove once all scrapers are in scrapers-ca.
-        # @see http://www.noslangues-ourlanguages.gc.ca/bien-well/fra-eng/typographie-typography/telephone-eng.html
-        def clean_tel(s):
-            splits = re.split(r'[\s-](?:x|ext\.?|poste)[\s-]?(?=\b|\d)', s, flags=re.IGNORECASE)
-            digits = re.sub(r'\D', '', splits[0])
-
-            if len(digits) == 10:
-                digits = '1' + digits
-
-            if len(digits) == 11 and digits[0] == '1' and len(splits) <= 2:
-                digits = re.sub(r'\A(\d)(\d{3})(\d{3})(\d{4})\Z', r'\1-\2-\3-\4', digits)
-                if len(splits) == 2:
-                    return '%s x%s' % (digits, splits[1])
-                else:
-                    return digits
-            else:
-                return s
-
         for source_rep in data:
             rep = self.create_child()
             for fieldname in ('name', 'district_name', 'elected_office', 'source_url', 'first_name', 'last_name',
                         'party_name', 'email', 'url', 'personal_url', 'photo_url', 'district_id',
                         'gender'):
                 if source_rep.get(fieldname) is not None:
-                    setattr(rep, fieldname, clean_string(source_rep[fieldname]))
+                    setattr(rep, fieldname, source_rep[fieldname])
             for json_fieldname in ('offices', 'extra'):
                 if source_rep.get(json_fieldname):
                     try:
@@ -209,16 +145,7 @@ class BaseRepresentativeSet(models.Model):
                         for d in getattr(rep, json_fieldname):
                             if isinstance(d, dict):
                                 for k in d.keys():
-                                    if isinstance(d[k], basestring):
-                                        if d[k]:
-                                            d[k] = clean_string(d[k])
-                                            if k == 'postal':
-                                                d[k] = clean_address(d[k])
-                                            elif k in ['tel', 'alt', 'fax', 'tollfree']:
-                                                d[k] = clean_tel(d[k])
-                                        else:
-                                            del d[k]
-                                    elif d[k] is None:
+                                    if not d[k]:
                                         del d[k]
 
             incumbent = unicode(source_rep.get('incumbent')).lower()
@@ -229,7 +156,6 @@ class BaseRepresentativeSet(models.Model):
 
             if not source_rep.get('name'):
                 rep.name = ' '.join(filter(None, [source_rep.get('first_name'), source_rep.get('last_name')]))
-            rep.name = strip_honorific(rep.name)
             if not source_rep.get('first_name') and not source_rep.get('last_name'):
                 (rep.first_name, rep.last_name) = split_name(rep.name)
 
