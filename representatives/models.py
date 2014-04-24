@@ -107,12 +107,7 @@ class BaseRepresentativeSet(models.Model):
     def update_from_data_source(self):
         data = json.load(urllib2.urlopen(self.data_url))
 
-        if (
-                # @todo Remove once all scrapers are in scrapers-ca. (This prevents imports from ScraperWiki.)
-                self.data_url.startswith('https://api.scraperwiki')
-                # No data
-                or not (isinstance(data, list) and data)):
-            # Don't try an update
+        if not (isinstance(data, list) and data):  # No data
             self.last_import_successful = False
             self.save()
             return False
