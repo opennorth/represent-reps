@@ -44,7 +44,7 @@ class BaseRepresentativeSet(models.Model):
     last_import_successful = models.NullBooleanField(blank=True, null=True)
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
-    slug = models.SlugField(max_length=300, unique=True, db_index=True, editable=False)
+    slug = models.SlugField(max_length=300, unique=True, db_index=True)
     enabled = models.BooleanField(default=True, blank=True, db_index=True)
 
     class Meta:
