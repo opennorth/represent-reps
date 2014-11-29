@@ -1,12 +1,12 @@
 from __future__ import unicode_literals
 
+import json
 import re
 
 from boundaries.base_views import ModelListView, ModelDetailView, BadRequest
 from boundaries.models import Boundary
 from django.utils.six.moves.urllib.parse import urlencode
 from django.utils.six.moves.urllib.request import urlopen
-from django.utils import simplejson as json
 
 from representatives.models import RepresentativeSet, Representative, Election, Candidate, app_settings
 from representatives.utils import boundary_url_to_name
