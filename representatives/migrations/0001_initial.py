@@ -1,86 +1,117 @@
-# encoding: utf-8
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
-class Migration(SchemaMigration):
-
-    def forwards(self, orm):
-        
-        # Adding model 'RepresentativeSet'
-        db.create_table('representatives_representativeset', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=300)),
-            ('scraperwiki_name', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('boundary_set', self.gf('django.db.models.fields.CharField')(max_length=300, blank=True)),
-            ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=300, db_index=True)),
-        ))
-        db.send_create_signal('representatives', ['RepresentativeSet'])
-
-        # Adding model 'Representative'
-        db.create_table('representatives_representative', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('representative_set', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['representatives.RepresentativeSet'])),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=300)),
-            ('district_name', self.gf('django.db.models.fields.CharField')(max_length=300)),
-            ('elected_office', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('source_url', self.gf('django.db.models.fields.URLField')(max_length=200)),
-            ('boundary', self.gf('django.db.models.fields.CharField')(db_index=True, max_length=300, blank=True)),
-            ('first_name', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('last_name', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('party_name', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('email', self.gf('django.db.models.fields.EmailField')(max_length=75, blank=True)),
-            ('url', self.gf('django.db.models.fields.URLField')(max_length=200, blank=True)),
-            ('personal_url', self.gf('django.db.models.fields.URLField')(max_length=200, blank=True)),
-            ('photo_url', self.gf('django.db.models.fields.URLField')(max_length=200, blank=True)),
-            ('district_id', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
-            ('gender', self.gf('django.db.models.fields.CharField')(max_length=1, blank=True)),
-            ('offices', self.gf('jsonfield.fields.JSONField')(blank=True)),
-            ('extra', self.gf('jsonfield.fields.JSONField')(blank=True)),
-        ))
-        db.send_create_signal('representatives', ['Representative'])
+from django.db import models, migrations
+import builtins
+import jsonfield.fields
 
 
-    def backwards(self, orm):
-        
-        # Deleting model 'RepresentativeSet'
-        db.delete_table('representatives_representativeset')
+class Migration(migrations.Migration):
 
-        # Deleting model 'Representative'
-        db.delete_table('representatives_representative')
+    dependencies = [
+    ]
 
-
-    models = {
-        'representatives.representative': {
-            'Meta': {'object_name': 'Representative'},
-            'boundary': ('django.db.models.fields.CharField', [], {'db_index': 'True', 'max_length': '300', 'blank': 'True'}),
-            'district_id': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'district_name': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
-            'elected_office': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
-            'extra': ('jsonfield.fields.JSONField', [], {'blank': 'True'}),
-            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'gender': ('django.db.models.fields.CharField', [], {'max_length': '1', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
-            'offices': ('jsonfield.fields.JSONField', [], {'blank': 'True'}),
-            'party_name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'personal_url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
-            'photo_url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'}),
-            'representative_set': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['representatives.RepresentativeSet']"}),
-            'source_url': ('django.db.models.fields.URLField', [], {'max_length': '200'}),
-            'url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
-        },
-        'representatives.representativeset': {
-            'Meta': {'object_name': 'RepresentativeSet'},
-            'boundary_set': ('django.db.models.fields.CharField', [], {'max_length': '300', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
-            'scraperwiki_name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '300', 'db_index': 'True'})
-        }
-    }
-
-    complete_apps = ['representatives']
+    operations = [
+        migrations.CreateModel(
+            name='Candidate',
+            fields=[
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
+                ('name', models.CharField(max_length=300)),
+                ('district_name', models.CharField(max_length=300)),
+                ('elected_office', models.CharField(max_length=200)),
+                ('source_url', models.URLField(max_length=2048)),
+                ('boundary', models.CharField(db_index=True, help_text='e.g. federal-electoral-districts/outremont', blank=True, max_length=300)),
+                ('first_name', models.CharField(blank=True, max_length=200)),
+                ('last_name', models.CharField(blank=True, max_length=200)),
+                ('party_name', models.CharField(blank=True, max_length=200)),
+                ('email', models.EmailField(blank=True, max_length=75)),
+                ('url', models.URLField(blank=True, max_length=2048)),
+                ('personal_url', models.URLField(blank=True, max_length=2048)),
+                ('photo_url', models.URLField(blank=True, max_length=2048)),
+                ('district_id', models.CharField(blank=True, max_length=200)),
+                ('gender', models.CharField(choices=[('F', 'Female'), ('M', 'Male')], blank=True, max_length=1)),
+                ('offices', jsonfield.fields.JSONField(default=builtins.dict, blank=True)),
+                ('extra', jsonfield.fields.JSONField(default=builtins.dict, blank=True)),
+                ('incumbent', models.NullBooleanField()),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Election',
+            fields=[
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
+                ('name', models.CharField(help_text='The name of the political body, e.g. BC Legislature', unique=True, max_length=300)),
+                ('data_url', models.URLField(help_text='URL to a JSON array of representatives within this set')),
+                ('data_about_url', models.URLField(help_text='URL to information about the scraper used to gather data', blank=True)),
+                ('last_import_time', models.DateTimeField(null=True, blank=True)),
+                ('last_import_successful', models.NullBooleanField()),
+                ('boundary_set', models.CharField(help_text='Name of the boundary set on the boundaries API, e.g. federal-electoral-districts', blank=True, max_length=300)),
+                ('slug', models.SlugField(unique=True, max_length=300)),
+                ('enabled', models.BooleanField(default=True, db_index=True)),
+                ('election_date', models.DateField()),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Representative',
+            fields=[
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
+                ('name', models.CharField(max_length=300)),
+                ('district_name', models.CharField(max_length=300)),
+                ('elected_office', models.CharField(max_length=200)),
+                ('source_url', models.URLField(max_length=2048)),
+                ('boundary', models.CharField(db_index=True, help_text='e.g. federal-electoral-districts/outremont', blank=True, max_length=300)),
+                ('first_name', models.CharField(blank=True, max_length=200)),
+                ('last_name', models.CharField(blank=True, max_length=200)),
+                ('party_name', models.CharField(blank=True, max_length=200)),
+                ('email', models.EmailField(blank=True, max_length=75)),
+                ('url', models.URLField(blank=True, max_length=2048)),
+                ('personal_url', models.URLField(blank=True, max_length=2048)),
+                ('photo_url', models.URLField(blank=True, max_length=2048)),
+                ('district_id', models.CharField(blank=True, max_length=200)),
+                ('gender', models.CharField(choices=[('F', 'Female'), ('M', 'Male')], blank=True, max_length=1)),
+                ('offices', jsonfield.fields.JSONField(default=builtins.dict, blank=True)),
+                ('extra', jsonfield.fields.JSONField(default=builtins.dict, blank=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='RepresentativeSet',
+            fields=[
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
+                ('name', models.CharField(help_text='The name of the political body, e.g. BC Legislature', unique=True, max_length=300)),
+                ('data_url', models.URLField(help_text='URL to a JSON array of representatives within this set')),
+                ('data_about_url', models.URLField(help_text='URL to information about the scraper used to gather data', blank=True)),
+                ('last_import_time', models.DateTimeField(null=True, blank=True)),
+                ('last_import_successful', models.NullBooleanField()),
+                ('boundary_set', models.CharField(help_text='Name of the boundary set on the boundaries API, e.g. federal-electoral-districts', blank=True, max_length=300)),
+                ('slug', models.SlugField(unique=True, max_length=300)),
+                ('enabled', models.BooleanField(default=True, db_index=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.AddField(
+            model_name='representative',
+            name='representative_set',
+            field=models.ForeignKey(related_name='individuals', to='representatives.RepresentativeSet'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='candidate',
+            name='election',
+            field=models.ForeignKey(related_name='individuals', to='representatives.Election'),
+            preserve_default=True,
+        ),
+    ]
