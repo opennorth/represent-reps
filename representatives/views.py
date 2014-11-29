@@ -1,5 +1,6 @@
 import re
-import urllib2, urllib
+import urllib2
+import urllib
 
 from django.utils import simplejson as json
 
@@ -10,6 +11,7 @@ from representatives.models import (Representative, RepresentativeSet, app_setti
     Candidate, Election)
 from representatives.utils import boundary_url_to_name
 
+
 # Oh dear! We're monkey-patching Boundary.as_dict
 def boundary_related_decorator(target):
     def inner(self):
@@ -19,8 +21,8 @@ def boundary_related_decorator(target):
     return inner
 Boundary.as_dict = boundary_related_decorator(Boundary.as_dict)
 
-class RepresentativeListView(ModelListView):
 
+class RepresentativeListView(ModelListView):
     model = Representative
     filterable_fields = ('name', 'first_name', 'last_name', 'gender', 'district_name', 'elected_office', 'party_name')
 
@@ -45,7 +47,7 @@ class RepresentativeListView(ModelListView):
                             + 'boundaries/?' + urllib.urlencode({'contains': request.GET['point']})
                 resp = urllib2.urlopen(request_url)
                 data = json.load(resp)
-                boundaries = [ boundary_url_to_name(o['url']) for o in data['objects'] ]
+                boundaries = [boundary_url_to_name(o['url']) for o in data['objects']]
             else:
                 try:
                     lat, lon = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
@@ -60,7 +62,6 @@ class RepresentativeListView(ModelListView):
 
 
 class RepresentativeSetListView(ModelListView):
-
     model = RepresentativeSet
 
     def get_qs(self, request):
@@ -69,7 +70,6 @@ class RepresentativeSetListView(ModelListView):
 
 
 class RepresentativeSetDetailView(ModelDetailView):
-
     model = RepresentativeSet
 
     def get_object(self, request, qs, slug):

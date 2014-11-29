@@ -4,8 +4,8 @@ from django.contrib import admin, messages
 
 from representatives.models import *
 
-class RepresentativeSetAdmin(admin.ModelAdmin):
 
+class RepresentativeSetAdmin(admin.ModelAdmin):
     actions = ['update_from_data_source']
     list_display = ['name', 'last_import_time', 'last_import_successful', 'enabled']
     list_filter = ['last_import_successful', 'enabled']
@@ -14,7 +14,7 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
         for rset in queryset:
             try:
                 num_updated = rset.update_from_data_source()
-            except Exception as e:
+            except Exception:
                 messages.error(request, u"Fatal error updating %s: %s" % (rset, traceback.format_exc()))
                 continue
             if num_updated is False:
@@ -27,17 +27,19 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
                 else:
                     messages.success(request, msg + " All matched a boundary.")
     update_from_data_source.short_description = "Update from data source"
-    
+
+
 class RepresentativeAdmin(admin.ModelAdmin):
     list_display = ['name', 'representative_set', 'district_name', 'elected_office', 'boundary']
     list_filter = ['representative_set']
     search_fields = ['name', 'district_name', 'elected_office']
 
+
 class CandidateAdmin(admin.ModelAdmin):
     list_display = ['name', 'election', 'district_name', 'elected_office', 'boundary']
     list_filter = ['election']
-    search_fields = ['name', 'district_name', 'elected_office']    
-    
+    search_fields = ['name', 'district_name', 'elected_office']
+
 admin.site.register(Representative, RepresentativeAdmin)
 admin.site.register(RepresentativeSet, RepresentativeSetAdmin)
 if app_settings.ENABLE_CANDIDATES:

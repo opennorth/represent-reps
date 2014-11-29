@@ -1,27 +1,21 @@
-# Represent API: Representatives
+# Represent Representatives
 
-[Represent](http://represent.opennorth.ca) is the open database of Canadian elected representatives and electoral districts. It provides a RESTful API to boundary, representative, and postcode resources.
+[Represent](http://represent.opennorth.ca) is the open database of Canadian elected officials and electoral districts. It provides a [REST API](http://represent.opennorth.ca/api/) to boundary, representative, and postcode resources.
 
-This repository provides an API to elected officials. It depends on [represent-boundaries](http://github.com/rhymeswithcycle/represent-boundaries). It expects source data to be available at a provided URL, formatted as a JSON array -- for example, from [ScraperWiki](http://scraperwiki.com/).
+This repository provides an API to elected officials. API documentation is available at [represent.opennorth.ca/api/](http://represent.opennorth.ca/api/#representativeset).
 
-The [represent-canada](http://github.com/opennorth/represent-canada) repository provides a full sample app.
-
-API documentation is available at [represent.opennorth.ca/api/](http://represent.opennorth.ca/api/#representativeset).
+The [represent-canada](http://github.com/opennorth/represent-canada) repository provides a master Django project, and points to packages which add boundary, postal code, and map features.
 
 ## Configuration
 
-Set `REPRESENTATIVES_BOUNDARYSERVICE_URL` to the base URL for a Represent boundaries API, e.g. `http://represent.opennorth.ca/`
+Set `REPRESENTATIVES_BOUNDARYSERVICE_URL` to the base URL for a Represent Boundaries API, e.g. `http://represent.opennorth.ca/`
 
 ## Adding data
 
-Create a representative set using the Django admin. (See Django docs for how to set that up.)
+Create a representative set using the Django admin site and then run the "Update from data source" action.
 
-Then, from the representative sets list in the admin, check the set you just created and choose the Update from ScraperWiki action.
+## Bugs? Questions?
 
-This will pull from the linked scraper and creative Representative objects, which you can then check in the Django admin.
+This project's main repository is on GitHub: [http://github.com/rhymeswithcycle/represent-reps](http://github.com/rhymeswithcycle/represent-postcodes), where your contributions and forks are greatly welcomed. Please submit bug reports, feature requests, and feedback to [represent-canada](http://github.com/opennorth/represent-canada).
 
-For more information on the format expected from scrapers, see the Represent [documentation](http://represent.opennorth.ca/api/#representative).
-
-## Contact
-
-Please use [GitHub Issues](http://github.com/opennorth/represent-canada/issues) for bug reports. You can also contact represent@opennorth.ca.
+Released under the MIT license

@@ -10,13 +10,13 @@ from django.db import models, transaction
 from django.template.defaultfilters import slugify
 
 from appconf import AppConf
-import dateutil.parser
 from jsonfield import JSONField
 
 from representatives.utils import get_comparison_string, boundary_url_to_name, split_name
 
 import logging
 logger = logging.getLogger(__name__)
+
 
 class MyAppConf(AppConf):
     BOUNDARYSERVICE_URL = 'http://represent.opennorth.ca/'
@@ -33,6 +33,7 @@ class MyAppConf(AppConf):
     DISABLE_CANDIDATES_AFTER_ELECTION = 5
 
 app_settings = MyAppConf()
+
 
 class BaseRepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
@@ -221,17 +222,14 @@ class Election(BaseRepresentativeSet):
             return False
         return super(Election, self).update_from_data_source()
 
-    
+
 class BaseRepresentative(models.Model):
-    
     name = models.CharField(max_length=300)
     district_name = models.CharField(max_length=300)
     elected_office = models.CharField(max_length=200)
     source_url = models.URLField()
-    
     boundary = models.CharField(max_length=300, blank=True, db_index=True,
         help_text="e.g. federal-electoral-districts/outremont")
-    
     first_name = models.CharField(max_length=200, blank=True)
     last_name = models.CharField(max_length=200, blank=True)
     party_name = models.CharField(max_length=200, blank=True)
@@ -240,16 +238,16 @@ class BaseRepresentative(models.Model):
     personal_url = models.URLField(blank=True)
     photo_url = models.URLField(blank=True)
     district_id = models.CharField(max_length=200, blank=True)
-    gender = models.CharField(max_length=1, blank=True, choices = (
+    gender = models.CharField(max_length=1, blank=True, choices=(
         ('F', 'Female'),
         ('M', 'Male')))
-    
+
     offices = JSONField(blank=True)
     extra = JSONField(blank=True)
 
     class Meta:
         abstract = True
-    
+
     def __unicode__(self):
         return "%s (%s for %s)" % (
             self.name, self.elected_office, self.district_name)
@@ -266,10 +264,10 @@ class BaseRepresentative(models.Model):
         return '/boundaries/%s/' % self.boundary if self.boundary else ''
 
     def as_dict(self):
-        r = dict( ( (f, getattr(self, f)) for f in
+        r = dict(((f, getattr(self, f)) for f in
             ('name', 'district_name', 'elected_office', 'source_url',
             'first_name', 'last_name', 'party_name', 'email', 'url', 'personal_url',
-            'photo_url', 'gender', 'offices', 'extra') ) )
+            'photo_url', 'gender', 'offices', 'extra')))
         set_obj = getattr(self, self.set_name)
         r[self.set_name + '_name'] = set_obj.name
         r['related'] = {
@@ -281,7 +279,7 @@ class BaseRepresentative(models.Model):
 
     @staticmethod
     def get_dicts(reps):
-        return [ rep.as_dict() for rep in reps ]
+        return [rep.as_dict() for rep in reps]
 
 
 class Representative(BaseRepresentative):
