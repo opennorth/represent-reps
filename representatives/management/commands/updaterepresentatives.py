@@ -5,19 +5,18 @@ import itertools
 
 from django.core.management.base import BaseCommand
 
-logger = logging.getLogger(__name__)
+from representatives.models import RepresentativeSet, Election
+
+log = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Pulls new data for all RepresentativeSets from ScraperWiki'
+    help = 'Updates representatives from sources'
 
     def handle(self, *args, **options):
-        from representatives.models import RepresentativeSet, Election
-
-        for rs in itertools.chain(
-                RepresentativeSet.objects.filter(enabled=True), Election.objects.filter(enabled=True)):
+        for representative_set in itertools.chain(RepresentativeSet.objects.filter(enabled=True), Election.objects.filter(enabled=True)):
             try:
-                rs.update_from_data_source()
+                representative_set.update_from_data_source()
             except Exception:
-                logger.exception("Failure updating %r" % rs)
-                rs.__class__.objects.filter(pk=rs.pk).update(last_import_successful=False)
+                log.error("Couldn't update representatives in %s." % representative_set)
+                representative_set.__class__.objects.filter(pk=representative_set.pk).update(last_import_successful=False)

@@ -4,7 +4,7 @@ import traceback
 
 from django.contrib import admin, messages
 
-from representatives.models import *
+from representatives.models import RepresentativeSet, Representative, Election, Candidate, app_settings
 
 
 class RepresentativeSetAdmin(admin.ModelAdmin):
@@ -13,21 +13,21 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
     list_filter = ['last_import_successful', 'enabled']
 
     def update_from_data_source(self, request, queryset):
-        for rset in queryset:
+        for representative_set in queryset:
             try:
-                num_updated = rset.update_from_data_source()
+                count = representative_set.update_from_data_source()
             except Exception:
-                messages.error(request, "Fatal error updating %s: %s" % (rset, traceback.format_exc()))
+                messages.error(request, "Couldn't update representatives in %s: %s" % (representative_set, traceback.format_exc()))
                 continue
-            if num_updated is False:
-                messages.error(request, "%s could not be updated." % rset)
+            if count is False:
+                messages.error(request, "Couldn't update representatives in %s." % representative_set)
             else:
-                msg = "Updated %s representatives for %s." % (num_updated, rset)
-                no_boundaries = Representative.objects.filter(representative_set=rset, boundary='').values_list('name', flat=True)
+                message = "Updated %s representatives in %s." % (count, representative_set)
+                no_boundaries = Representative.objects.filter(representative_set=representative_set, boundary='').values_list('name', flat=True)
                 if no_boundaries:
-                    messages.warning(request, msg + " %d did not match a boundary (%s)." % (len(no_boundaries), ', '.join(no_boundaries)))
+                    messages.warning(request, message + " %d match no boundary (%s)." % (len(no_boundaries), ', '.join(no_boundaries)))
                 else:
-                    messages.success(request, msg + " All matched a boundary.")
+                    messages.success(request, message)
     update_from_data_source.short_description = "Update from data source"
 
 
@@ -42,8 +42,9 @@ class CandidateAdmin(admin.ModelAdmin):
     list_filter = ['election']
     search_fields = ['name', 'district_name', 'elected_office']
 
-admin.site.register(Representative, RepresentativeAdmin)
+
 admin.site.register(RepresentativeSet, RepresentativeSetAdmin)
+admin.site.register(Representative, RepresentativeAdmin)
 if app_settings.ENABLE_CANDIDATES:
-    admin.site.register(Candidate, CandidateAdmin)
     admin.site.register(Election, RepresentativeSetAdmin)
+    admin.site.register(Candidate, CandidateAdmin)

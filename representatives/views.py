@@ -1,26 +1,25 @@
 from __future__ import unicode_literals
 
 import re
-from django.utils.six.moves.urllib.parse import urlencode
-from django.utils.six.moves.urllib.request import urlopen
-
-from django.utils import simplejson as json
 
 from boundaries.base_views import ModelListView, ModelDetailView, BadRequest
 from boundaries.models import Boundary
+from django.utils.six.moves.urllib.parse import urlencode
+from django.utils.six.moves.urllib.request import urlopen
+from django.utils import simplejson as json
 
-from representatives.models import (Representative, RepresentativeSet, app_settings,
-    Candidate, Election)
+from representatives.models import RepresentativeSet, Representative, Election, Candidate, app_settings
 from representatives.utils import boundary_url_to_name
 
 
 # Oh dear! We're monkey-patching Boundary.as_dict
 def boundary_related_decorator(target):
-    def inner(self):
-        r = target(self)
-        r['related']['representatives_url'] = self.get_absolute_url() + 'representatives/'
-        return r
-    return inner
+    def decorate(self):
+        boundary = target(self)
+        boundary['related']['representatives_url'] = self.get_absolute_url() + 'representatives/'
+        return boundary
+
+    return decorate
 Boundary.as_dict = boundary_related_decorator(Boundary.as_dict)
 
 
@@ -28,10 +27,10 @@ class RepresentativeListView(ModelListView):
     model = Representative
     filterable_fields = ('name', 'first_name', 'last_name', 'gender', 'district_name', 'elected_office', 'party_name')
 
-    def get_qs(self, request, district=None, set_slug=None):
+    def get_qs(self, request, slug=None, set_slug=None):
         qs = super(RepresentativeListView, self).get_qs(request)
-        if district:
-            qs = qs.filter(boundary=district)
+        if slug:
+            qs = qs.filter(boundary=slug)
         elif set_slug:
             qs = qs.filter(**{self.model.set_name + '__slug': set_slug})
         return qs.select_related(self.model.set_name)
@@ -43,21 +42,17 @@ class RepresentativeListView(ModelListView):
             qs = qs.filter(boundary__in=request.GET['districts'].split(','))
 
         if 'point' in request.GET:
-            # Figure out the boundaries for that point
             if app_settings.RESOLVE_POINT_REQUESTS_OVER_HTTP:
-                request_url = app_settings.BOUNDARYSERVICE_URL \
-                            + 'boundaries/?' + urlencode({'contains': request.GET['point']})
-                resp = urlopen(request_url)
-                data = json.load(resp)
-                boundaries = [boundary_url_to_name(o['url']) for o in data['objects']]
+                url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/?' + urlencode({'contains': request.GET['point']})
+                boundaries = [boundary_url_to_name(boundary['url']) for boundary in json.load(urlopen(url))['objects']]
             else:
                 try:
-                    lat, lon = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
-                    wkt_pt = 'POINT(%s %s)' % (lon, lat)
-                    boundaries = Boundary.objects.filter(shape__contains=wkt_pt).values_list('set_id', 'slug')
+                    latitude, longitude = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
+                    wkt = 'POINT(%s %s)' % (longitude, latitude)
+                    boundaries = Boundary.objects.filter(shape__contains=wkt).values_list('set_id', 'slug')
                 except ValueError:
                     raise BadRequest("Invalid latitude,longitude '%s' provided." % request.GET['point'])
-                boundaries = ['/'.join(b) for b in boundaries]
+                boundaries = ['/'.join(boundary) for boundary in boundaries]
             qs = qs.filter(boundary__in=boundaries)
 
         return qs

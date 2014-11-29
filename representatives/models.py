@@ -3,8 +3,11 @@ from __future__ import unicode_literals
 
 import datetime
 import json
+import logging
 import re
+import unicodedata
 
+from appconf import AppConf
 from django.core import urlresolvers
 from django.db import models, transaction
 from django.template.defaultfilters import slugify
@@ -13,13 +16,10 @@ from django.utils.six import text_type
 from django.utils.six.moves.urllib.parse import urljoin
 from django.utils.six.moves.urllib.request import urlopen
 from django.utils.six.moves.urllib.error import HTTPError
-
-from appconf import AppConf
 from jsonfield import JSONField
 
-from representatives.utils import get_comparison_string, boundary_url_to_name, split_name
+from representatives.utils import boundary_url_to_name
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -314,3 +314,21 @@ def _check_boundary_validity(boundary_url):
         return resp.code == 200
     except HTTPError:
         return False
+
+
+def get_comparison_string(s):
+    """Given a string or unicode, returns a simplified lowercase whitespace-free ASCII string.
+    Used to compare slightly different versions of the same thing, which may differ in case,
+    spacing, or use of accents."""
+    nkfd_form = unicodedata.normalize('NFKD', text_type(s).lower())
+    s = ''.join([c for c in nkfd_form if not unicodedata.combining(c)])
+    s = re.sub(r'[^a-zA-Z0-9]', '-', s)
+    return re.sub(r'--+', '-', s)
+
+
+def split_name(n):
+    """Given a name, returns (first_name, last_name)."""
+    # Very simple implementation currently just splits out the last component.
+    n_bits = n.split(' ')
+    last = n_bits.pop()
+    return ' '.join(n_bits), last
