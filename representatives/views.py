@@ -1,6 +1,8 @@
+from __future__ import unicode_literals
+
 import re
-import urllib2
-import urllib
+from django.utils.six.moves.urllib.parse import urlencode
+from django.utils.six.moves.urllib.request import urlopen
 
 from django.utils import simplejson as json
 
@@ -44,8 +46,8 @@ class RepresentativeListView(ModelListView):
             # Figure out the boundaries for that point
             if app_settings.RESOLVE_POINT_REQUESTS_OVER_HTTP:
                 request_url = app_settings.BOUNDARYSERVICE_URL \
-                            + 'boundaries/?' + urllib.urlencode({'contains': request.GET['point']})
-                resp = urllib2.urlopen(request_url)
+                            + 'boundaries/?' + urlencode({'contains': request.GET['point']})
+                resp = urlopen(request_url)
                 data = json.load(resp)
                 boundaries = [boundary_url_to_name(o['url']) for o in data['objects']]
             else:

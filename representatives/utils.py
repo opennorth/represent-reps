@@ -1,5 +1,9 @@
+from __future__ import unicode_literals
+
 import re
 import unicodedata
+
+from django.utils.six import text_type
 
 
 def get_comparison_string(s):
@@ -11,8 +15,8 @@ def get_comparison_string(s):
 
 
 def remove_accents(s):
-    nkfd_form = unicodedata.normalize('NFKD', unicode(s))
-    return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+    nkfd_form = unicodedata.normalize('NFKD', text_type(s))
+    return "".join([c for c in nkfd_form if not unicodedata.combining(c)])
 
 
 def boundary_url_to_name(s):

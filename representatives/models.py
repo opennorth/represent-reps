@@ -1,13 +1,18 @@
 # coding: utf-8
+from __future__ import unicode_literals
+
 import datetime
 import json
 import re
-import urllib2
-from urlparse import urljoin
 
 from django.core import urlresolvers
 from django.db import models, transaction
 from django.template.defaultfilters import slugify
+from django.utils.encoding import python_2_unicode_compatible
+from django.utils.six import text_type
+from django.utils.six.moves.urllib.parse import urljoin
+from django.utils.six.moves.urllib.request import urlopen
+from django.utils.six.moves.urllib.error import HTTPError
 
 from appconf import AppConf
 from jsonfield import JSONField
@@ -35,6 +40,7 @@ class MyAppConf(AppConf):
 app_settings = MyAppConf()
 
 
+@python_2_unicode_compatible
 class BaseRepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
         help_text="The name of the political body, e.g. BC Legislature",
@@ -51,7 +57,7 @@ class BaseRepresentativeSet(models.Model):
     class Meta:
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
@@ -61,11 +67,11 @@ class BaseRepresentativeSet(models.Model):
 
     @property
     def boundary_set_url(self):
-        return u'/boundary-sets/%s/' % self.boundary_set if self.boundary_set else ''
+        return '/boundary-sets/%s/' % self.boundary_set if self.boundary_set else ''
 
     @property
     def boundaries_url(self):
-        return u'/boundaries/%s/' % self.boundary_set if self.boundary_set else ''
+        return '/boundaries/%s/' % self.boundary_set if self.boundary_set else ''
 
     def as_dict(self):
         return {
@@ -92,7 +98,7 @@ class BaseRepresentativeSet(models.Model):
         set_url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/' + self.boundary_set + '/?limit=0'
         boundaries = []
         while set_url:
-            set_data = json.load(urllib2.urlopen(set_url))
+            set_data = json.load(urlopen(set_url))
             boundaries.extend(set_data['objects'])
             if set_data['meta'].get('next'):
                 set_url = urljoin(app_settings.BOUNDARYSERVICE_URL, set_data['meta']['next'])
@@ -106,7 +112,7 @@ class BaseRepresentativeSet(models.Model):
 
     @transaction.commit_on_success
     def update_from_data_source(self):
-        data = json.load(urllib2.urlopen(self.data_url))
+        data = json.load(urlopen(self.data_url))
 
         if not (isinstance(data, list) and data):  # No data
             self.last_import_successful = False
@@ -136,7 +142,7 @@ class BaseRepresentativeSet(models.Model):
                     try:
                         setattr(rep, json_fieldname, json.loads(source_rep.get(json_fieldname)))
                     except ValueError:
-                        raise Exception(u"Invalid JSON in %s: %s" % (json_fieldname, source_rep.get(json_fieldname)))
+                        raise Exception("Invalid JSON in %s: %s" % (json_fieldname, source_rep.get(json_fieldname)))
                     if isinstance(getattr(rep, json_fieldname), list):
                         for d in getattr(rep, json_fieldname):
                             if isinstance(d, dict):
@@ -144,14 +150,14 @@ class BaseRepresentativeSet(models.Model):
                                     if not d[k]:
                                         del d[k]
 
-            incumbent = unicode(source_rep.get('incumbent')).lower()
+            incumbent = text_type(source_rep.get('incumbent')).lower()
             if incumbent in ('1', 'true', 'yes', 'y'):
                 rep.incumbent = True
             elif incumbent in ('0', 'false', 'no', 'n'):
                 rep.incumbent = False
 
             if not source_rep.get('name'):
-                rep.name = ' '.join(filter(None, [source_rep.get('first_name'), source_rep.get('last_name')]))
+                rep.name = ' '.join([component for component in [source_rep.get('first_name'), source_rep.get('last_name')] if component])
             if not source_rep.get('first_name') and not source_rep.get('last_name'):
                 (rep.first_name, rep.last_name) = split_name(rep.name)
 
@@ -205,7 +211,7 @@ class Election(BaseRepresentativeSet):
 
     def as_dict(self):
         r = super(Election, self).as_dict()
-        r['election_date'] = unicode(self.election_date) if self.election_date else None
+        r['election_date'] = text_type(self.election_date) if self.election_date else None
         r['related']['candidates_url'] = urlresolvers.reverse(
             'representatives_candidate_list', kwargs={'set_slug': self.slug})
         return r
@@ -223,6 +229,7 @@ class Election(BaseRepresentativeSet):
         return super(Election, self).update_from_data_source()
 
 
+@python_2_unicode_compatible
 class BaseRepresentative(models.Model):
     name = models.CharField(max_length=300)
     district_name = models.CharField(max_length=300)
@@ -248,7 +255,7 @@ class BaseRepresentative(models.Model):
     class Meta:
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s (%s for %s)" % (
             self.name, self.elected_office, self.district_name)
 
@@ -303,7 +310,7 @@ def _check_boundary_validity(boundary_url):
     if not re.search(r'^/boundaries/[^/\s]+/[^/\s]+/$', boundary_url):
         return False
     try:
-        resp = urllib2.urlopen(urljoin(app_settings.BOUNDARYSERVICE_URL, boundary_url))
+        resp = urlopen(urljoin(app_settings.BOUNDARYSERVICE_URL, boundary_url))
         return resp.code == 200
-    except urllib2.HTTPError:
+    except HTTPError:
         return False

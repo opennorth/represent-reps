@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import traceback
 
 from django.contrib import admin, messages
@@ -15,7 +17,7 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
             try:
                 num_updated = rset.update_from_data_source()
             except Exception:
-                messages.error(request, u"Fatal error updating %s: %s" % (rset, traceback.format_exc()))
+                messages.error(request, "Fatal error updating %s: %s" % (rset, traceback.format_exc()))
                 continue
             if num_updated is False:
                 messages.error(request, "%s could not be updated." % rset)
