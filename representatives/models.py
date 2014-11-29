@@ -234,21 +234,20 @@ class BaseRepresentative(models.Model):
     name = models.CharField(max_length=300)
     district_name = models.CharField(max_length=300)
     elected_office = models.CharField(max_length=200)
-    source_url = models.URLField()
+    source_url = models.URLField(max_length=2048)
     boundary = models.CharField(max_length=300, blank=True, db_index=True,
         help_text="e.g. federal-electoral-districts/outremont")
     first_name = models.CharField(max_length=200, blank=True)
     last_name = models.CharField(max_length=200, blank=True)
     party_name = models.CharField(max_length=200, blank=True)
     email = models.EmailField(blank=True)
-    url = models.URLField(blank=True)
-    personal_url = models.URLField(blank=True)
-    photo_url = models.URLField(blank=True)
+    url = models.URLField(blank=True, max_length=2048)
+    personal_url = models.URLField(blank=True, max_length=2048)
+    photo_url = models.URLField(blank=True, max_length=2048)
     district_id = models.CharField(max_length=200, blank=True)
     gender = models.CharField(max_length=1, blank=True, choices=(
         ('F', 'Female'),
         ('M', 'Male')))
-
     offices = JSONField(blank=True)
     extra = JSONField(blank=True)
 
