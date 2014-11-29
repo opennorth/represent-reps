@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import builtins
 import jsonfield.fields
 
 
@@ -30,8 +29,8 @@ class Migration(migrations.Migration):
                 ('photo_url', models.URLField(blank=True, max_length=2048)),
                 ('district_id', models.CharField(blank=True, max_length=200)),
                 ('gender', models.CharField(choices=[('F', 'Female'), ('M', 'Male')], blank=True, max_length=1)),
-                ('offices', jsonfield.fields.JSONField(default=builtins.dict, blank=True)),
-                ('extra', jsonfield.fields.JSONField(default=builtins.dict, blank=True)),
+                ('offices', jsonfield.fields.JSONField(default=dict, blank=True)),
+                ('extra', jsonfield.fields.JSONField(default=dict, blank=True)),
                 ('incumbent', models.NullBooleanField()),
             ],
             options={
@@ -76,8 +75,8 @@ class Migration(migrations.Migration):
                 ('photo_url', models.URLField(blank=True, max_length=2048)),
                 ('district_id', models.CharField(blank=True, max_length=200)),
                 ('gender', models.CharField(choices=[('F', 'Female'), ('M', 'Male')], blank=True, max_length=1)),
-                ('offices', jsonfield.fields.JSONField(default=builtins.dict, blank=True)),
-                ('extra', jsonfield.fields.JSONField(default=builtins.dict, blank=True)),
+                ('offices', jsonfield.fields.JSONField(default=dict, blank=True)),
+                ('extra', jsonfield.fields.JSONField(default=dict, blank=True)),
             ],
             options={
                 'abstract': False,
