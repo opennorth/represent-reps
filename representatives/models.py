@@ -258,13 +258,6 @@ class BaseRepresentative(models.Model):
         return "%s (%s for %s)" % (
             self.name, self.elected_office, self.district_name)
 
-    def save(self, *args, **kwargs):
-        if not self.offices:
-            self.offices = []
-        if not self.extra:
-            self.extra = {}
-        super(BaseRepresentative, self).save(*args, **kwargs)
-
     @property
     def boundary_url(self):
         return '/boundaries/%s/' % self.boundary if self.boundary else ''
