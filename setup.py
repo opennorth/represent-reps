@@ -13,7 +13,7 @@ setup(
     ],
     install_requires=[
         'django-appconf',
-        'django-jsonfield>=0.7.1',
+        'jsonfield==0.9.23',
         'represent-boundaries',
     ],
     classifiers=[
