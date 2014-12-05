@@ -5,8 +5,8 @@ from south.v2 import DataMigration
 from django.db import models
 
 import itertools
-from urlparse import urljoin
-from urllib import urlencode
+from django.utils.six.moves.urllib.parse import urljoin
+from django.utils.six.moves.urllib.parse import urlencode
 
 class Migration(DataMigration):
 
