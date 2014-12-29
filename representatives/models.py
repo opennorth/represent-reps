@@ -22,6 +22,9 @@ from representatives.utils import boundary_url_to_name
 
 logger = logging.getLogger(__name__)
 
+if not hasattr(transaction, 'atomic'):  # Django < 1.6
+    transaction.atomic = transaction.commit_on_success
+
 
 class MyAppConf(AppConf):
     BOUNDARYSERVICE_URL = 'http://represent.opennorth.ca/'
@@ -110,7 +113,7 @@ class BaseRepresentativeSet(models.Model):
         object belonging to this set."""
         raise NotImplementedError
 
-    @transaction.commit_on_success
+    @transaction.atomic
     def update_from_data_source(self):
         data = json.load(urlopen(self.data_url))
 
