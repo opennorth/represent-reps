@@ -44,7 +44,7 @@ class RepresentativeListView(ModelListView):
         if 'point' in request.GET:
             if app_settings.RESOLVE_POINT_REQUESTS_OVER_HTTP:
                 url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/?' + urlencode({'contains': request.GET['point']})
-                boundaries = [boundary_url_to_name(boundary['url']) for boundary in json.load(urlopen(url))['objects']]
+                boundaries = [boundary_url_to_name(boundary['url']) for boundary in json.loads(urlopen(url).read().decode())['objects']]
             else:
                 try:
                     latitude, longitude = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')

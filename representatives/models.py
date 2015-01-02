@@ -101,7 +101,7 @@ class BaseRepresentativeSet(models.Model):
         set_url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/' + self.boundary_set + '/?limit=0'
         boundaries = []
         while set_url:
-            set_data = json.load(urlopen(set_url))
+            set_data = json.loads(urlopen(set_url).read().decode())
             boundaries.extend(set_data['objects'])
             if set_data['meta'].get('next'):
                 set_url = urljoin(app_settings.BOUNDARYSERVICE_URL, set_data['meta']['next'])
@@ -115,7 +115,7 @@ class BaseRepresentativeSet(models.Model):
 
     @transaction.atomic
     def update_from_data_source(self):
-        data = json.load(urlopen(self.data_url))
+        data = json.loads(urlopen(self.data_url).read().decode())
 
         if not (isinstance(data, list) and data):  # No data
             self.last_import_successful = False
