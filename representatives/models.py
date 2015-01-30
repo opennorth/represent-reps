@@ -27,7 +27,7 @@ if not hasattr(transaction, 'atomic'):  # Django < 1.6
 
 
 class MyAppConf(AppConf):
-    BOUNDARYSERVICE_URL = 'http://represent.opennorth.ca/'
+    BOUNDARYSERVICE_URL = 'https://represent.opennorth.ca/'
 
     # If False, makes a direct database query on the Boundary model for
     # ?point=lat,lng queries. If True, makes an HTTP request to BOUNDARYSERVICE_URL
