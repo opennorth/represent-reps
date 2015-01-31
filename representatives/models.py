@@ -321,9 +321,11 @@ def get_comparison_string(s):
     return re.sub(r'--+', '-', s)
 
 
-def split_name(n):
+def split_name(name):
     """Given a name, returns (first_name, last_name)."""
-    # Very simple implementation currently just splits out the last component.
-    n_bits = n.split(' ')
-    last = n_bits.pop()
-    return ' '.join(n_bits), last
+    family_names = []
+    components = name.split(' ')
+    family_names.insert(0, components.pop())
+    if components[-1] in ('De', 'Del', 'Di', 'Van', 'da', 'de', 'van'):
+        family_names.insert(0, components.pop())
+    return ' '.join(components), ' '.join(family_names)
