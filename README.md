@@ -16,6 +16,6 @@ Create a representative set using the Django admin site and then run the "Update
 
 ## Bugs? Questions?
 
-This project's main repository is on GitHub: [https://github.com/rhymeswithcycle/represent-reps](https://github.com/rhymeswithcycle/represent-postcodes), where your contributions and forks are greatly welcomed. Please submit bug reports, feature requests, and feedback to [represent-canada](https://github.com/opennorth/represent-canada).
+Please submit bug reports, feature requests, and feedback to [represent-canada](https://github.com/opennorth/represent-canada).
 
 Released under the MIT license
