@@ -127,13 +127,16 @@ class BaseRepresentativeSet(models.Model):
 
         boundaries = self.get_list_of_boundaries()
         boundary_names = dict((
-            (b['name'], b['url']) for b in boundaries
+            (get_comparison_string(b['name']), b['url']) for b in boundaries
         ))
         boundary_ids = dict((
             (b.get('external_id'), b['url']) for b in boundaries
         ))
-        boundary_comparison_strings = dict((
-            (get_comparison_string(b['name']), b['url']) for b in boundaries
+        url_to_name = dict((
+            (b['url'], b['name']) for b in boundaries
+        ))
+        url_to_id = dict((
+            (b['url'], b.get('external_id')) for b in boundaries
         ))
 
         for source_rep in data:
@@ -176,16 +179,16 @@ class BaseRepresentativeSet(models.Model):
                 if rep.district_id:
                     boundary_url = boundary_ids.get(rep.district_id)
                 if not boundary_url:
-                    boundary_url = boundary_comparison_strings.get(get_comparison_string(rep.district_name))
+                    boundary_url = boundary_names.get(get_comparison_string(rep.district_name))
 
             if not boundary_url:
                 logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
             else:
                 rep.boundary = boundary_url_to_name(boundary_url)
                 if not rep.district_name:
-                    rep.district_name = next((name for name, url in boundary_names.items() if url == boundary_url))
+                    rep.district_name = url_to_name[boundaries_url]
                 if not rep.district_id:
-                    rep.district_id = next((external_id for external_id, url in boundary_ids.items() if url == boundary_url))
+                    rep.district_id = url_to_id[boundaries_url]
             rep.save()
 
         self.last_import_time = datetime.datetime.now()
