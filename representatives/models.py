@@ -127,17 +127,21 @@ class BaseRepresentativeSet(models.Model):
 
         boundaries = self.get_list_of_boundaries()
         boundary_names = dict((
-            (get_comparison_string(b['name']), b['url']) for b in boundaries
+            (b['name'], b['url']) for b in boundaries
         ))
         boundary_ids = dict((
             (b.get('external_id'), b['url']) for b in boundaries
         ))
+        boundary_comparison_strings = dict((
+            (get_comparison_string(b['name']), b['url']) for b in boundaries
+        ))
 
         for source_rep in data:
             rep = self.create_child()
-            for fieldname in ('name', 'district_name', 'elected_office', 'source_url', 'first_name', 'last_name',
-                        'party_name', 'email', 'url', 'personal_url', 'photo_url', 'district_id',
-                        'gender'):
+            for fieldname in ('name', 'district_name', 'elected_office',
+                    'source_url', 'first_name', 'last_name', 'party_name',
+                    'email', 'url', 'personal_url', 'photo_url', 'district_id',
+                    'gender'):
                 if source_rep.get(fieldname) is not None:
                     setattr(rep, fieldname, source_rep[fieldname])
             for json_fieldname in ('offices', 'extra'):
@@ -172,12 +176,16 @@ class BaseRepresentativeSet(models.Model):
                 if rep.district_id:
                     boundary_url = boundary_ids.get(rep.district_id)
                 if not boundary_url:
-                    boundary_url = boundary_names.get(get_comparison_string(rep.district_name))
+                    boundary_url = boundary_comparison_strings.get(get_comparison_string(rep.district_name))
 
             if not boundary_url:
                 logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
             else:
                 rep.boundary = boundary_url_to_name(boundary_url)
+                if not rep.district_name:
+                    rep.district_name = next((name for name, url in boundary_names.items() if url == boundary_url))
+                if not rep.district_id:
+                    rep.district_id = next((external_id for external_id, url in boundary_ids.items() if url == boundary_url))
             rep.save()
 
         self.last_import_time = datetime.datetime.now()
