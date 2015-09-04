@@ -186,9 +186,9 @@ class BaseRepresentativeSet(models.Model):
             else:
                 rep.boundary = boundary_url_to_name(boundary_url)
                 if not rep.district_name:
-                    rep.district_name = url_to_name[boundaries_url]
+                    rep.district_name = url_to_name[boundary_url]
                 if not rep.district_id:
-                    rep.district_id = url_to_id[boundaries_url]
+                    rep.district_id = url_to_id[boundary_url]
             rep.save()
 
         self.last_import_time = datetime.datetime.now()
