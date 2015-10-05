@@ -10,6 +10,7 @@ setup(
         'representatives',
         'representatives.management',
         'representatives.management.commands',
+        'representatives.migrations',
     ],
     install_requires=[
         'django-appconf',
