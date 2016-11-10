@@ -337,6 +337,6 @@ def split_name(name):
     family_names = []
     components = name.split(' ')
     family_names.insert(0, components.pop())
-    if components[-1] in ('De', 'Del', 'Di', 'Van', 'da', 'de', 'van'):
+    if components and components[-1] in ('De', 'Del', 'Di', 'Van', 'da', 'de', 'van'):
         family_names.insert(0, components.pop())
     return ' '.join(components), ' '.join(family_names)
