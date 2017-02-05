@@ -20,6 +20,8 @@ def boundary_related_decorator(target):
         return boundary
 
     return decorate
+
+
 Boundary.as_dict = boundary_related_decorator(Boundary.as_dict)
 
 

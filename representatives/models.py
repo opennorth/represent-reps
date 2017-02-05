@@ -40,6 +40,7 @@ class MyAppConf(AppConf):
     # the Election.
     DISABLE_CANDIDATES_AFTER_ELECTION = 5
 
+
 app_settings = MyAppConf()
 
 
@@ -232,9 +233,9 @@ class Election(BaseRepresentativeSet):
 
     def update_from_data_source(self):
         # Disable Election if the date has passed
-        if (app_settings.DISABLE_CANDIDATES_AFTER_ELECTION is not False
-                and self.election_date
-                and datetime.date.today() - self.election_date > datetime.timedelta(
+        if (app_settings.DISABLE_CANDIDATES_AFTER_ELECTION is not False and
+                self.election_date and
+                datetime.date.today() - self.election_date > datetime.timedelta(
                     days=app_settings.DISABLE_CANDIDATES_AFTER_ELECTION)):
             self.enabled = False
             self.save()
