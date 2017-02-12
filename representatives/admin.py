@@ -13,17 +13,17 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
     list_filter = ['last_import_successful', 'enabled']
 
     def update_from_data_source(self, request, queryset):
-        for representative_set in queryset:
+        for individual_set in queryset:
             try:
-                count = representative_set.update_from_data_source()
+                count = individual_set.update_from_data_source()
             except Exception:
-                messages.error(request, "Couldn't update representatives in %s: %s" % (representative_set, traceback.format_exc()))
+                messages.error(request, "Couldn't update individuals in %s: %s" % (individual_set, traceback.format_exc()))
                 continue
             if count is False:
-                messages.error(request, "Couldn't update representatives in %s." % representative_set)
+                messages.error(request, "Couldn't update individuals in %s." % individual_set)
             else:
-                message = "Updated %s representatives in %s." % (count, representative_set)
-                no_boundaries = Representative.objects.filter(representative_set=representative_set, boundary='').values_list('name', flat=True)
+                message = "Updated %s individuals in %s." % (count, individual_set)
+                no_boundaries = individual_set.individuals.filter(boundary='').values_list('name', flat=True)
                 if no_boundaries:
                     messages.warning(request, message + " %d match no boundary (%s)." % (len(no_boundaries), ', '.join(no_boundaries)))
                 else:

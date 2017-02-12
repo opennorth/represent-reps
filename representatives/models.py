@@ -47,9 +47,9 @@ app_settings = MyAppConf()
 @python_2_unicode_compatible
 class BaseRepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
-        help_text="The name of the political body, e.g. BC Legislature",
+        help_text="The name of the political body, e.g. House of Commons",
         unique=True)
-    data_url = models.URLField(help_text="URL to a JSON array of representatives within this set")
+    data_url = models.URLField(help_text="URL to a JSON array of individuals within this set")
     data_about_url = models.URLField(blank=True, help_text="URL to information about the scraper used to gather data")
     last_import_time = models.DateTimeField(blank=True, null=True)
     last_import_successful = models.NullBooleanField(blank=True, null=True)
@@ -233,7 +233,7 @@ class Election(BaseRepresentativeSet):
 
     def update_from_data_source(self):
         # Disable Election if the date has passed
-        if (app_settings.DISABLE_CANDIDATES_AFTER_ELECTION is not False and
+        if (app_settings.DISABLE_CANDIDATES_AFTER_ELECTION and
                 self.election_date and
                 datetime.date.today() - self.election_date > datetime.timedelta(
                     days=app_settings.DISABLE_CANDIDATES_AFTER_ELECTION)):
