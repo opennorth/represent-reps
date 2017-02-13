@@ -14,7 +14,8 @@ setup(
     ],
     install_requires=[
         'django-appconf',
-        'jsonfield==0.9.23',
+        # @see https://docs.djangoproject.com/en/1.10/ref/contrib/postgres/fields/#jsonfield
+        'jsonfield>=0.9.20,<1',
         'represent-boundaries',
     ],
     classifiers=[
