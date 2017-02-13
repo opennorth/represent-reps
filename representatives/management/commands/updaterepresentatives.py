@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Updates representatives from sources'
+    help = 'Updates representatives from sources.'
 
     def handle(self, *args, **options):
         for representative_set in itertools.chain(RepresentativeSet.objects.filter(enabled=True), Election.objects.filter(enabled=True)):
