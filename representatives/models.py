@@ -1,22 +1,18 @@
 # coding: utf-8
-from __future__ import unicode_literals
-
 import datetime
 import json
 import logging
 import re
 import unicodedata
+from urllib.error import HTTPError
+from urllib.parse import urljoin
+from urllib.request import urlopen
 
 from appconf import AppConf
 # @see https://docs.djangoproject.com/en/1.10/ref/urlresolvers/ Django 1.10
 from django.core.urlresolvers import reverse
 from django.db import models, transaction
 from django.template.defaultfilters import slugify
-from django.utils.encoding import python_2_unicode_compatible
-from django.utils.six import text_type
-from django.utils.six.moves.urllib.parse import urljoin
-from django.utils.six.moves.urllib.request import urlopen
-from django.utils.six.moves.urllib.error import HTTPError
 from jsonfield import JSONField
 
 from representatives.utils import boundary_url_to_name
@@ -42,7 +38,6 @@ class MyAppConf(AppConf):
 app_settings = MyAppConf()
 
 
-@python_2_unicode_compatible
 class BaseRepresentativeSet(models.Model):
     name = models.CharField(max_length=300,
         help_text="The name of the political body, e.g. House of Commons",
@@ -159,7 +154,7 @@ class BaseRepresentativeSet(models.Model):
                                     if not d[k]:
                                         del d[k]
 
-            incumbent = text_type(source_rep.get('incumbent')).lower()
+            incumbent = str(source_rep.get('incumbent')).lower()
             if incumbent in ('1', 'true', 'yes', 'y'):
                 rep.incumbent = True
             elif incumbent in ('0', 'false', 'no', 'n'):
@@ -224,7 +219,7 @@ class Election(BaseRepresentativeSet):
 
     def as_dict(self):
         r = super(Election, self).as_dict()
-        r['election_date'] = text_type(self.election_date) if self.election_date else None
+        r['election_date'] = str(self.election_date) if self.election_date else None
         r['related']['candidates_url'] = reverse(
             'representatives_candidate_list', kwargs={'set_slug': self.slug})
         return r
@@ -242,7 +237,6 @@ class Election(BaseRepresentativeSet):
         return super(Election, self).update_from_data_source()
 
 
-@python_2_unicode_compatible
 class BaseRepresentative(models.Model):
     name = models.CharField(max_length=300)
     district_name = models.CharField(max_length=300)
@@ -325,7 +319,7 @@ def get_comparison_string(s):
     """Given a string or unicode, returns a simplified lowercase whitespace-free ASCII string.
     Used to compare slightly different versions of the same thing, which may differ in case,
     spacing, or use of accents."""
-    nkfd_form = unicodedata.normalize('NFKD', text_type(s).lower())
+    nkfd_form = unicodedata.normalize('NFKD', str(s).lower())
     s = ''.join([c for c in nkfd_form if not unicodedata.combining(c)])
     s = re.sub(r'[^a-zA-Z0-9]', '-', s)
     return re.sub(r'--+', '-', s)
