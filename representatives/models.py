@@ -8,7 +8,8 @@ import re
 import unicodedata
 
 from appconf import AppConf
-from django.core import urlresolvers
+# @see https://docs.djangoproject.com/en/1.10/ref/urlresolvers/ Django 1.10
+from django.core.urlresolvers import reverse
 from django.db import models, transaction
 from django.template.defaultfilters import slugify
 from django.utils.encoding import python_2_unicode_compatible
@@ -201,12 +202,12 @@ class RepresentativeSet(BaseRepresentativeSet):
         return Representative(representative_set=self)
 
     def get_absolute_url(self):
-        return urlresolvers.reverse('representatives_representative_set_detail',
+        return reverse('representatives_representative_set_detail',
             kwargs={'slug': self.slug})
 
     def as_dict(self):
         r = super(RepresentativeSet, self).as_dict()
-        r['related']['representatives_url'] = urlresolvers.reverse(
+        r['related']['representatives_url'] = reverse(
             'representatives_representative_list', kwargs={'set_slug': self.slug})
         return r
 
@@ -218,13 +219,13 @@ class Election(BaseRepresentativeSet):
         return Candidate(election=self)
 
     def get_absolute_url(self):
-        return urlresolvers.reverse('representatives_election_detail',
+        return reverse('representatives_election_detail',
             kwargs={'slug': self.slug})
 
     def as_dict(self):
         r = super(Election, self).as_dict()
         r['election_date'] = text_type(self.election_date) if self.election_date else None
-        r['related']['candidates_url'] = urlresolvers.reverse(
+        r['related']['candidates_url'] = reverse(
             'representatives_candidate_list', kwargs={'set_slug': self.slug})
         return r
 
