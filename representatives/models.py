@@ -176,7 +176,7 @@ class BaseRepresentativeSet(models.Model):
                     boundary_url = boundary_names.get(get_comparison_string(rep.district_name))
 
             if not boundary_url:
-                logger.warning("Couldn't find district boundary %s in %s" % (rep.district_name, self.boundary_set))
+                logger.warning("%s: Couldn't find district boundary %s in %s" % (self.slug, rep.district_name, self.boundary_set))
             else:
                 rep.boundary = boundary_url_to_name(boundary_url)
                 if not rep.district_name:
