@@ -4,7 +4,7 @@ setup(
     name="represent-representatives",
     version="0.2",
     description="A web API for elected officials tied to electoral districts, packaged as a Django app.",
-    url="https://github.com/rhymeswithcycle/represent-reps",
+    url="https://github.com/opennorth/represent-reps",
     license="MIT",
     packages=[
         'representatives',
