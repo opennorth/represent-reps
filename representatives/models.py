@@ -9,8 +9,7 @@ from urllib.parse import urljoin
 from urllib.request import urlopen
 
 from appconf import AppConf
-# @see https://docs.djangoproject.com/en/1.10/ref/urlresolvers/ Django 1.10
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import models, transaction
 from django.template.defaultfilters import slugify
 from jsonfield import JSONField
