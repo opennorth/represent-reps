@@ -2,8 +2,14 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import jsonfield.fields
 
+class JSONField(models.TextField):
+    """Mocks jsonfield 0.92's column-type behaviour"""
+    def db_type(self, connection):
+        if connection.vendor == 'postgresql' and connection.pg_version >= 90300:
+            return 'json'
+        else:
+            return super(JSONField, self).db_type(connection)
 
 class Migration(migrations.Migration):
 
@@ -29,8 +35,8 @@ class Migration(migrations.Migration):
                 ('photo_url', models.URLField(blank=True, max_length=2048)),
                 ('district_id', models.CharField(blank=True, max_length=200)),
                 ('gender', models.CharField(choices=[('F', 'Female'), ('M', 'Male')], blank=True, max_length=1)),
-                ('offices', jsonfield.fields.JSONField(default=dict, blank=True)),
-                ('extra', jsonfield.fields.JSONField(default=dict, blank=True)),
+                ('offices', JSONField(default=dict, blank=True)),
+                ('extra', JSONField(default=dict, blank=True)),
                 ('incumbent', models.NullBooleanField()),
             ],
             options={
@@ -75,8 +81,8 @@ class Migration(migrations.Migration):
                 ('photo_url', models.URLField(blank=True, max_length=2048)),
                 ('district_id', models.CharField(blank=True, max_length=200)),
                 ('gender', models.CharField(choices=[('F', 'Female'), ('M', 'Male')], blank=True, max_length=1)),
-                ('offices', jsonfield.fields.JSONField(default=dict, blank=True)),
-                ('extra', jsonfield.fields.JSONField(default=dict, blank=True)),
+                ('offices', JSONField(default=dict, blank=True)),
+                ('extra', JSONField(default=dict, blank=True)),
             ],
             options={
                 'abstract': False,

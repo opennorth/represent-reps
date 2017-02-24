@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="represent-representatives",
-    version="0.2",
+    version="0.3",
     description="A web API for elected officials tied to electoral districts, packaged as a Django app.",
     url="https://github.com/opennorth/represent-reps",
     license="MIT",
@@ -14,8 +14,6 @@ setup(
     ],
     install_requires=[
         'django-appconf',
-        # @see https://docs.djangoproject.com/en/1.10/ref/contrib/postgres/fields/#jsonfield Django 1.9 and PostgreSQL 9.4
-        'jsonfield>=0.9.20,<1',
         'represent-boundaries',
     ],
     classifiers=[
