@@ -8,11 +8,12 @@ from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
-from appconf import AppConf
-from django.urls import reverse
+from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.template.defaultfilters import slugify
-from jsonfield import JSONField
+from django.urls import reverse
+
+from appconf import AppConf
 
 from representatives.utils import boundary_url_to_name
 

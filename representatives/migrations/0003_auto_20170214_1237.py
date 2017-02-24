@@ -3,8 +3,14 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import jsonfield.fields
 
+class JSONField(models.TextField):
+    """Mocks jsonfield 0.92's column-type behaviour"""
+    def db_type(self, connection):
+        if connection.vendor == 'postgresql' and connection.pg_version >= 90300:
+            return 'json'
+        else:
+            return super(JSONField, self).db_type(connection)
 
 class Migration(migrations.Migration):
 
@@ -21,12 +27,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='candidate',
             name='extra',
-            field=jsonfield.fields.JSONField(default={}),
+            field=JSONField(default={}),
         ),
         migrations.AlterField(
             model_name='candidate',
             name='offices',
-            field=jsonfield.fields.JSONField(default=[]),
+            field=JSONField(default=[]),
         ),
         migrations.AlterField(
             model_name='election',
@@ -46,12 +52,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='representative',
             name='extra',
-            field=jsonfield.fields.JSONField(default={}),
+            field=JSONField(default={}),
         ),
         migrations.AlterField(
             model_name='representative',
             name='offices',
-            field=jsonfield.fields.JSONField(default=[]),
+            field=JSONField(default=[]),
         ),
         migrations.AlterField(
             model_name='representativeset',
