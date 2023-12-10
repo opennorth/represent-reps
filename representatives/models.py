@@ -7,12 +7,11 @@ from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
-from django.db.models import JSONField
+from appconf import AppConf
 from django.db import models, transaction
+from django.db.models import JSONField
 from django.template.defaultfilters import slugify
 from django.urls import reverse
-
-from appconf import AppConf
 
 from representatives.utils import boundary_url_to_name
 

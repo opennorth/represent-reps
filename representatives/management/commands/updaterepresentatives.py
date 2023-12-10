@@ -1,9 +1,9 @@
-import logging
 import itertools
+import logging
 
 from django.core.management.base import BaseCommand
 
-from representatives.models import RepresentativeSet, Election
+from representatives.models import Election, RepresentativeSet
 
 log = logging.getLogger(__name__)
 

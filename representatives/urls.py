@@ -2,8 +2,13 @@ from django.urls import path, re_path
 
 from representatives.models import app_settings
 from representatives.views import (
-    RepresentativeSetListView, RepresentativeSetDetailView, RepresentativeListView,
-    ElectionListView, ElectionDetailView, CandidateListView)
+    CandidateListView,
+    ElectionDetailView,
+    ElectionListView,
+    RepresentativeListView,
+    RepresentativeSetDetailView,
+    RepresentativeSetListView,
+)
 
 urlpatterns = [
     path('representatives/', RepresentativeListView.as_view()),

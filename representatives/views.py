@@ -3,10 +3,16 @@ import re
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-from boundaries.base_views import ModelListView, ModelDetailView, BadRequest
+from boundaries.base_views import BadRequest, ModelDetailView, ModelListView
 from boundaries.models import Boundary
 
-from representatives.models import RepresentativeSet, Representative, Election, Candidate, app_settings
+from representatives.models import (
+    Candidate,
+    Election,
+    Representative,
+    RepresentativeSet,
+    app_settings,
+)
 from representatives.utils import boundary_url_to_name
 
 

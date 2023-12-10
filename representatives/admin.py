@@ -2,7 +2,13 @@ import traceback
 
 from django.contrib import admin, messages
 
-from representatives.models import RepresentativeSet, Representative, Election, Candidate, app_settings
+from representatives.models import (
+    Candidate,
+    Election,
+    Representative,
+    RepresentativeSet,
+    app_settings,
+)
 
 
 @admin.register(RepresentativeSet)
