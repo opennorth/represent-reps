@@ -7,7 +7,7 @@ from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.db import models, transaction
 from django.template.defaultfilters import slugify
 from django.urls import reverse
@@ -44,7 +44,7 @@ class BaseRepresentativeSet(models.Model):
     data_url = models.URLField(help_text="URL to a JSON array of individuals within this set")
     data_about_url = models.URLField(blank=True, help_text="URL to information about the scraper used to gather data")
     last_import_time = models.DateTimeField(blank=True, null=True)
-    last_import_successful = models.NullBooleanField(blank=True, null=True)
+    last_import_successful = models.BooleanField(blank=True, null=True)
     boundary_set = models.CharField(max_length=300, blank=True,
         help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
     slug = models.SlugField(max_length=300, unique=True, db_index=True)
@@ -288,13 +288,13 @@ class BaseRepresentative(models.Model):
 
 
 class Representative(BaseRepresentative):
-    representative_set = models.ForeignKey(RepresentativeSet, related_name='individuals')
+    representative_set = models.ForeignKey(RepresentativeSet, on_delete=models.CASCADE, related_name='individuals')
     set_name = 'representative_set'
 
 
 class Candidate(BaseRepresentative):
-    election = models.ForeignKey(Election, related_name='individuals')
-    incumbent = models.NullBooleanField(blank=True)
+    election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='individuals')
+    incumbent = models.BooleanField(blank=True, null=True)
     set_name = 'election'
 
     def as_dict(self):

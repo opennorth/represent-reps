@@ -107,13 +107,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='representative',
             name='representative_set',
-            field=models.ForeignKey(related_name='individuals', to='representatives.RepresentativeSet'),
+            field=models.ForeignKey(on_delete=models.CASCADE, related_name='individuals', to='representatives.RepresentativeSet'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='candidate',
             name='election',
-            field=models.ForeignKey(related_name='individuals', to='representatives.Election'),
+            field=models.ForeignKey(on_delete=models.CASCADE, related_name='individuals', to='representatives.Election'),
             preserve_default=True,
         ),
     ]
