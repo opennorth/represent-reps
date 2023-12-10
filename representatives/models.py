@@ -37,15 +37,20 @@ app_settings = MyAppConf()
 
 
 class BaseRepresentativeSet(models.Model):
-    name = models.CharField(max_length=300,
+    name = models.CharField(
+        max_length=300,
+        unique=True,
         help_text="The name of the political body, e.g. House of Commons",
-        unique=True)
+    )
     data_url = models.URLField(help_text="URL to a JSON array of individuals within this set")
     data_about_url = models.URLField(blank=True, help_text="URL to information about the scraper used to gather data")
     last_import_time = models.DateTimeField(blank=True, null=True)
     last_import_successful = models.BooleanField(blank=True, null=True)
-    boundary_set = models.CharField(max_length=300, blank=True,
-        help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
+    boundary_set = models.CharField(
+        blank=True,
+        max_length=300,
+        help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts",
+    )
     slug = models.SlugField(max_length=300, unique=True, db_index=True)
     enabled = models.BooleanField(default=True, blank=True, db_index=True)
 
@@ -133,10 +138,21 @@ class BaseRepresentativeSet(models.Model):
 
         for source_rep in data:
             rep = self.create_child()
-            for fieldname in ('name', 'district_name', 'elected_office',
-                    'source_url', 'first_name', 'last_name', 'party_name',
-                    'email', 'url', 'personal_url', 'photo_url', 'district_id',
-                    'gender'):
+            for fieldname in (
+                'name',
+                'district_name',
+                'elected_office',
+                'source_url',
+                'first_name',
+                'last_name',
+                'party_name',
+                'email',
+                'url',
+                'personal_url',
+                'photo_url',
+                'district_id',
+                'gender',
+            ):
                 if source_rep.get(fieldname) is not None:
                     setattr(rep, fieldname, source_rep[fieldname])
             for json_fieldname in ('offices', 'extra'):
@@ -195,13 +211,13 @@ class RepresentativeSet(BaseRepresentativeSet):
         return Representative(representative_set=self)
 
     def get_absolute_url(self):
-        return reverse('representatives_representative_set_detail',
-            kwargs={'slug': self.slug})
+        return reverse('representatives_representative_set_detail', kwargs={'slug': self.slug})
 
     def as_dict(self):
         r = super().as_dict()
         r['related']['representatives_url'] = reverse(
-            'representatives_representative_list', kwargs={'set_slug': self.slug})
+            'representatives_representative_list', kwargs={'set_slug': self.slug}
+        )
         return r
 
 
@@ -212,8 +228,7 @@ class Election(BaseRepresentativeSet):
         return Candidate(election=self)
 
     def get_absolute_url(self):
-        return reverse('representatives_election_detail',
-            kwargs={'slug': self.slug})
+        return reverse('representatives_election_detail', kwargs={'slug': self.slug})
 
     def as_dict(self):
         r = super().as_dict()
@@ -240,19 +255,21 @@ class BaseRepresentative(models.Model):
     district_name = models.CharField(max_length=300)
     elected_office = models.CharField(max_length=200)
     source_url = models.URLField(max_length=2048)
-    boundary = models.CharField(max_length=300, blank=True, db_index=True,
-        help_text="e.g. federal-electoral-districts/outremont")
-    first_name = models.CharField(max_length=200, blank=True)
-    last_name = models.CharField(max_length=200, blank=True)
-    party_name = models.CharField(max_length=200, blank=True)
+    boundary = models.CharField(
+        blank=True,
+        max_length=300,
+        db_index=True,
+        help_text="e.g. federal-electoral-districts/outremont",
+    )
+    first_name = models.CharField(blank=True, max_length=200)
+    last_name = models.CharField(blank=True, max_length=200)
+    party_name = models.CharField(blank=True, max_length=200)
     email = models.EmailField(blank=True)
     url = models.URLField(blank=True, max_length=2048)
     personal_url = models.URLField(blank=True, max_length=2048)
     photo_url = models.URLField(blank=True, max_length=2048)
-    district_id = models.CharField(max_length=200, blank=True)
-    gender = models.CharField(max_length=1, blank=True, choices=(
-        ('F', 'Female'),
-        ('M', 'Male')))
+    district_id = models.CharField(blank=True, max_length=200)
+    gender = models.CharField(blank=True, max_length=1, choices=(('F', 'Female'), ('M', 'Male')))
     offices = JSONField(default=list)
     extra = JSONField(default=dict)
 
@@ -268,10 +285,24 @@ class BaseRepresentative(models.Model):
         return '/boundaries/%s/' % self.boundary if self.boundary else ''
 
     def as_dict(self):
-        r = {f: getattr(self, f) for f in
-            ('name', 'district_name', 'elected_office', 'source_url',
-            'first_name', 'last_name', 'party_name', 'email', 'url', 'personal_url',
-            'photo_url', 'gender', 'offices', 'extra')}
+        r = {
+            f: getattr(self, f) for f in (
+                'name',
+                'district_name',
+                'elected_office',
+                'source_url',
+                'first_name',
+                'last_name',
+                'party_name',
+                'email',
+                'url',
+                'personal_url',
+                'photo_url',
+                'gender',
+                'offices',
+                'extra',
+            )
+        }
         set_obj = getattr(self, self.set_name)
         r[self.set_name + '_name'] = set_obj.name
         r['related'] = {
