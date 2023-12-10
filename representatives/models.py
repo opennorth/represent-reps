@@ -160,7 +160,7 @@ class BaseRepresentativeSet(models.Model):
                     try:
                         setattr(rep, json_fieldname, json.loads(source_rep.get(json_fieldname)))
                     except ValueError:
-                        raise Exception("Invalid JSON in {}: {}".format(json_fieldname, source_rep.get(json_fieldname)))
+                        raise Exception(f"Invalid JSON in {json_fieldname}: {source_rep.get(json_fieldname)}")
                     if isinstance(getattr(rep, json_fieldname), list):
                         for d in getattr(rep, json_fieldname):
                             if isinstance(d, dict):
@@ -175,7 +175,7 @@ class BaseRepresentativeSet(models.Model):
                 rep.incumbent = False
 
             if not source_rep.get('name'):
-                rep.name = ' '.join([component for component in [source_rep.get('first_name'), source_rep.get('last_name')] if component])
+                rep.name = ' '.join([c for c in [source_rep.get('first_name'), source_rep.get('last_name')] if c])
             if not source_rep.get('first_name') and not source_rep.get('last_name'):
                 (rep.first_name, rep.last_name) = split_name(rep.name)
 
@@ -190,7 +190,9 @@ class BaseRepresentativeSet(models.Model):
                     boundary_url = boundary_names.get(get_comparison_string(rep.district_name))
 
             if not boundary_url:
-                logger.warning("{}: Couldn't find district boundary {} in {}".format(self.slug, rep.district_name, self.boundary_set))
+                logger.warning(
+                    "%s: Couldn't find district boundary %s in %s", self.slug, rep.district_name, self.boundary_set
+                )
             else:
                 rep.boundary = boundary_url_to_name(boundary_url)
                 if not rep.district_name:
@@ -277,8 +279,7 @@ class BaseRepresentative(models.Model):
         abstract = True
 
     def __str__(self):
-        return "{} ({} for {})".format(
-            self.name, self.elected_office, self.district_name)
+        return f"{self.name} ({self.elected_office} for {self.district_name})"
 
     @property
     def boundary_url(self):

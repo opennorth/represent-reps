@@ -50,11 +50,14 @@ class RepresentativeListView(ModelListView):
         if 'point' in request.GET:
             if app_settings.RESOLVE_POINT_REQUESTS_OVER_HTTP:
                 url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/?' + urlencode({'contains': request.GET['point']})
-                boundaries = [boundary_url_to_name(boundary['url']) for boundary in json.loads(urlopen(url).read().decode())['objects']]
+                boundaries = [
+                    boundary_url_to_name(boundary['url'])
+                    for boundary in json.loads(urlopen(url).read().decode())['objects']
+                ]
             else:
                 try:
                     latitude, longitude = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
-                    wkt = 'POINT({} {})'.format(longitude, latitude)
+                    wkt = f'POINT({longitude} {latitude})'
                     boundaries = Boundary.objects.filter(shape__contains=wkt).values_list('set_id', 'slug')
                 except ValueError:
                     raise BadRequest("Invalid latitude,longitude '%s' provided." % request.GET['point'])

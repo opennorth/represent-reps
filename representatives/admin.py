@@ -25,15 +25,17 @@ class RepresentativeSetAdmin(admin.ModelAdmin):
             try:
                 count = individual_set.update_from_data_source()
             except Exception:
-                messages.error(request, "Couldn't update individuals in {}: {}".format(individual_set, traceback.format_exc()))
+                messages.error(request, f"Couldn't update individuals in {individual_set}: {traceback.format_exc()}")
                 continue
             if count is False:
-                messages.error(request, "Couldn't update individuals in %s." % individual_set)
+                messages.error(request, f"Couldn't update individuals in {individual_set}.")
             else:
-                message = "Updated {} individuals in {}.".format(count, individual_set)
+                message = f"Updated {count} individuals in {individual_set}."
                 no_boundaries = individual_set.individuals.filter(boundary='').values_list('name', flat=True)
                 if no_boundaries:
-                    messages.warning(request, message + " %d match no boundary (%s)." % (len(no_boundaries), ', '.join(no_boundaries)))
+                    messages.warning(
+                        request, message + f" {len(no_boundaries)} match no boundary ({', '.join(no_boundaries)})."
+                    )
                 else:
                     messages.success(request, message)
 
