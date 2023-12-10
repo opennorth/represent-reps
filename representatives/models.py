@@ -254,8 +254,8 @@ class BaseRepresentative(models.Model):
     gender = models.CharField(max_length=1, blank=True, choices=(
         ('F', 'Female'),
         ('M', 'Male')))
-    offices = JSONField(default=[])
-    extra = JSONField(default={})
+    offices = JSONField(default=list)
+    extra = JSONField(default=dict)
 
     class Meta:
         abstract = True
