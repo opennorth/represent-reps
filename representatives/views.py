@@ -3,10 +3,10 @@ import re
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-from boundaries.base_views import ModelListView, ModelDetailView, BadRequest
+from boundaries.base_views import BadRequest, ModelDetailView, ModelListView
 from boundaries.models import Boundary
 
-from representatives.models import RepresentativeSet, Representative, Election, Candidate, app_settings
+from representatives.models import Candidate, Election, Representative, RepresentativeSet, app_settings
 from representatives.utils import boundary_url_to_name
 
 
@@ -28,7 +28,7 @@ class RepresentativeListView(ModelListView):
     filterable_fields = ('name', 'first_name', 'last_name', 'gender', 'district_name', 'elected_office', 'party_name')
 
     def get_qs(self, request, slug=None, set_slug=None):
-        qs = super(RepresentativeListView, self).get_qs(request)
+        qs = super().get_qs(request)
         if slug:
             qs = qs.filter(boundary=slug)
         elif set_slug:
@@ -36,7 +36,7 @@ class RepresentativeListView(ModelListView):
         return qs.select_related(self.model.set_name)
 
     def filter(self, request, qs):
-        qs = super(RepresentativeListView, self).filter(request, qs)
+        qs = super().filter(request, qs)
 
         if 'districts' in request.GET:
             qs = qs.filter(boundary__in=request.GET['districts'].split(','))
@@ -44,11 +44,14 @@ class RepresentativeListView(ModelListView):
         if 'point' in request.GET:
             if app_settings.RESOLVE_POINT_REQUESTS_OVER_HTTP:
                 url = app_settings.BOUNDARYSERVICE_URL + 'boundaries/?' + urlencode({'contains': request.GET['point']})
-                boundaries = [boundary_url_to_name(boundary['url']) for boundary in json.loads(urlopen(url).read().decode())['objects']]
+                boundaries = [
+                    boundary_url_to_name(boundary['url'])
+                    for boundary in json.loads(urlopen(url).read().decode())['objects']
+                ]
             else:
                 try:
                     latitude, longitude = re.sub(r'[^\d.,-]', '', request.GET['point']).split(',')
-                    wkt = 'POINT(%s %s)' % (longitude, latitude)
+                    wkt = f'POINT({longitude} {latitude})'
                     boundaries = Boundary.objects.filter(shape__contains=wkt).values_list('set_id', 'slug')
                 except ValueError:
                     raise BadRequest("Invalid latitude,longitude '%s' provided." % request.GET['point'])
@@ -62,7 +65,7 @@ class RepresentativeSetListView(ModelListView):
     model = RepresentativeSet
 
     def get_qs(self, request):
-        qs = super(RepresentativeSetListView, self).get_qs(request)
+        qs = super().get_qs(request)
         return qs.filter(enabled=True)
 
 
