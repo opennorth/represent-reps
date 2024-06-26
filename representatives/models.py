@@ -1,4 +1,3 @@
-# coding: utf-8
 import datetime
 import json
 import logging
@@ -8,12 +7,11 @@ from urllib.error import HTTPError
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
-from django.contrib.postgres.fields import JSONField
+from appconf import AppConf
 from django.db import models, transaction
+from django.db.models import JSONField
 from django.template.defaultfilters import slugify
 from django.urls import reverse
-
-from appconf import AppConf
 
 from representatives.utils import boundary_url_to_name
 
@@ -39,15 +37,20 @@ app_settings = MyAppConf()
 
 
 class BaseRepresentativeSet(models.Model):
-    name = models.CharField(max_length=300,
+    name = models.CharField(
+        max_length=300,
+        unique=True,
         help_text="The name of the political body, e.g. House of Commons",
-        unique=True)
+    )
     data_url = models.URLField(help_text="URL to a JSON array of individuals within this set")
     data_about_url = models.URLField(blank=True, help_text="URL to information about the scraper used to gather data")
     last_import_time = models.DateTimeField(blank=True, null=True)
-    last_import_successful = models.NullBooleanField(blank=True, null=True)
-    boundary_set = models.CharField(max_length=300, blank=True,
-        help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts")
+    last_import_successful = models.BooleanField(blank=True, null=True)
+    boundary_set = models.CharField(
+        blank=True,
+        max_length=300,
+        help_text="Name of the boundary set on the boundaries API, e.g. federal-electoral-districts",
+    )
     slug = models.SlugField(max_length=300, unique=True, db_index=True)
     enabled = models.BooleanField(default=True, blank=True, db_index=True)
 
@@ -60,7 +63,7 @@ class BaseRepresentativeSet(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
-        return super(BaseRepresentativeSet, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     @property
     def boundary_set_url(self):
@@ -120,25 +123,36 @@ class BaseRepresentativeSet(models.Model):
         self.individuals.all().delete()
 
         boundaries = self.get_list_of_boundaries()
-        boundary_names = dict((
-            (get_comparison_string(b['name']), b['url']) for b in boundaries
-        ))
-        boundary_ids = dict((
-            (b.get('external_id'), b['url']) for b in boundaries
-        ))
-        url_to_name = dict((
-            (b['url'], b['name']) for b in boundaries
-        ))
-        url_to_id = dict((
-            (b['url'], b.get('external_id')) for b in boundaries
-        ))
+        boundary_names = {
+            get_comparison_string(b['name']): b['url'] for b in boundaries
+        }
+        boundary_ids = {
+            b.get('external_id'): b['url'] for b in boundaries
+        }
+        url_to_name = {
+            b['url']: b['name'] for b in boundaries
+        }
+        url_to_id = {
+            b['url']: b.get('external_id') for b in boundaries
+        }
 
         for source_rep in data:
             rep = self.create_child()
-            for fieldname in ('name', 'district_name', 'elected_office',
-                    'source_url', 'first_name', 'last_name', 'party_name',
-                    'email', 'url', 'personal_url', 'photo_url', 'district_id',
-                    'gender'):
+            for fieldname in (
+                'name',
+                'district_name',
+                'elected_office',
+                'source_url',
+                'first_name',
+                'last_name',
+                'party_name',
+                'email',
+                'url',
+                'personal_url',
+                'photo_url',
+                'district_id',
+                'gender',
+            ):
                 if source_rep.get(fieldname) is not None:
                     setattr(rep, fieldname, source_rep[fieldname])
             for json_fieldname in ('offices', 'extra'):
@@ -146,7 +160,7 @@ class BaseRepresentativeSet(models.Model):
                     try:
                         setattr(rep, json_fieldname, json.loads(source_rep.get(json_fieldname)))
                     except ValueError:
-                        raise Exception("Invalid JSON in %s: %s" % (json_fieldname, source_rep.get(json_fieldname)))
+                        raise Exception(f"Invalid JSON in {json_fieldname}: {source_rep.get(json_fieldname)}")
                     if isinstance(getattr(rep, json_fieldname), list):
                         for d in getattr(rep, json_fieldname):
                             if isinstance(d, dict):
@@ -161,7 +175,7 @@ class BaseRepresentativeSet(models.Model):
                 rep.incumbent = False
 
             if not source_rep.get('name'):
-                rep.name = ' '.join([component for component in [source_rep.get('first_name'), source_rep.get('last_name')] if component])
+                rep.name = ' '.join([c for c in [source_rep.get('first_name'), source_rep.get('last_name')] if c])
             if not source_rep.get('first_name') and not source_rep.get('last_name'):
                 (rep.first_name, rep.last_name) = split_name(rep.name)
 
@@ -176,7 +190,9 @@ class BaseRepresentativeSet(models.Model):
                     boundary_url = boundary_names.get(get_comparison_string(rep.district_name))
 
             if not boundary_url:
-                logger.warning("%s: Couldn't find district boundary %s in %s" % (self.slug, rep.district_name, self.boundary_set))
+                logger.warning(
+                    "%s: Couldn't find district boundary %s in %s", self.slug, rep.district_name, self.boundary_set
+                )
             else:
                 rep.boundary = boundary_url_to_name(boundary_url)
                 if not rep.district_name:
@@ -197,13 +213,13 @@ class RepresentativeSet(BaseRepresentativeSet):
         return Representative(representative_set=self)
 
     def get_absolute_url(self):
-        return reverse('representatives_representative_set_detail',
-            kwargs={'slug': self.slug})
+        return reverse('representatives_representative_set_detail', kwargs={'slug': self.slug})
 
     def as_dict(self):
-        r = super(RepresentativeSet, self).as_dict()
+        r = super().as_dict()
         r['related']['representatives_url'] = reverse(
-            'representatives_representative_list', kwargs={'set_slug': self.slug})
+            'representatives_representative_list', kwargs={'set_slug': self.slug}
+        )
         return r
 
 
@@ -214,11 +230,10 @@ class Election(BaseRepresentativeSet):
         return Candidate(election=self)
 
     def get_absolute_url(self):
-        return reverse('representatives_election_detail',
-            kwargs={'slug': self.slug})
+        return reverse('representatives_election_detail', kwargs={'slug': self.slug})
 
     def as_dict(self):
-        r = super(Election, self).as_dict()
+        r = super().as_dict()
         r['election_date'] = str(self.election_date) if self.election_date else None
         r['related']['candidates_url'] = reverse(
             'representatives_candidate_list', kwargs={'set_slug': self.slug})
@@ -234,7 +249,7 @@ class Election(BaseRepresentativeSet):
             self.save()
             self.individuals.all().delete()
             return False
-        return super(Election, self).update_from_data_source()
+        return super().update_from_data_source()
 
 
 class BaseRepresentative(models.Model):
@@ -242,38 +257,53 @@ class BaseRepresentative(models.Model):
     district_name = models.CharField(max_length=300)
     elected_office = models.CharField(max_length=200)
     source_url = models.URLField(max_length=2048)
-    boundary = models.CharField(max_length=300, blank=True, db_index=True,
-        help_text="e.g. federal-electoral-districts/outremont")
-    first_name = models.CharField(max_length=200, blank=True)
-    last_name = models.CharField(max_length=200, blank=True)
-    party_name = models.CharField(max_length=200, blank=True)
+    boundary = models.CharField(
+        blank=True,
+        max_length=300,
+        db_index=True,
+        help_text="e.g. federal-electoral-districts/outremont",
+    )
+    first_name = models.CharField(blank=True, max_length=200)
+    last_name = models.CharField(blank=True, max_length=200)
+    party_name = models.CharField(blank=True, max_length=200)
     email = models.EmailField(blank=True)
     url = models.URLField(blank=True, max_length=2048)
     personal_url = models.URLField(blank=True, max_length=2048)
     photo_url = models.URLField(blank=True, max_length=2048)
-    district_id = models.CharField(max_length=200, blank=True)
-    gender = models.CharField(max_length=1, blank=True, choices=(
-        ('F', 'Female'),
-        ('M', 'Male')))
-    offices = JSONField(default=[])
-    extra = JSONField(default={})
+    district_id = models.CharField(blank=True, max_length=200)
+    gender = models.CharField(blank=True, max_length=1, choices=(('F', 'Female'), ('M', 'Male')))
+    offices = JSONField(default=list)
+    extra = JSONField(default=dict)
 
     class Meta:
         abstract = True
 
     def __str__(self):
-        return "%s (%s for %s)" % (
-            self.name, self.elected_office, self.district_name)
+        return f"{self.name} ({self.elected_office} for {self.district_name})"
 
     @property
     def boundary_url(self):
         return '/boundaries/%s/' % self.boundary if self.boundary else ''
 
     def as_dict(self):
-        r = dict(((f, getattr(self, f)) for f in
-            ('name', 'district_name', 'elected_office', 'source_url',
-            'first_name', 'last_name', 'party_name', 'email', 'url', 'personal_url',
-            'photo_url', 'gender', 'offices', 'extra')))
+        r = {
+            f: getattr(self, f) for f in (
+                'name',
+                'district_name',
+                'elected_office',
+                'source_url',
+                'first_name',
+                'last_name',
+                'party_name',
+                'email',
+                'url',
+                'personal_url',
+                'photo_url',
+                'gender',
+                'offices',
+                'extra',
+            )
+        }
         set_obj = getattr(self, self.set_name)
         r[self.set_name + '_name'] = set_obj.name
         r['related'] = {
@@ -289,17 +319,17 @@ class BaseRepresentative(models.Model):
 
 
 class Representative(BaseRepresentative):
-    representative_set = models.ForeignKey(RepresentativeSet, related_name='individuals')
+    representative_set = models.ForeignKey(RepresentativeSet, on_delete=models.CASCADE, related_name='individuals')
     set_name = 'representative_set'
 
 
 class Candidate(BaseRepresentative):
-    election = models.ForeignKey(Election, related_name='individuals')
-    incumbent = models.NullBooleanField(blank=True)
+    election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='individuals')
+    incumbent = models.BooleanField(blank=True, null=True)
     set_name = 'election'
 
     def as_dict(self):
-        r = super(Candidate, self).as_dict()
+        r = super().as_dict()
         r['incumbent'] = self.incumbent
         return r
 
