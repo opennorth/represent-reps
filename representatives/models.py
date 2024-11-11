@@ -9,7 +9,6 @@ from urllib.request import urlopen
 
 from appconf import AppConf
 from django.db import models, transaction
-from django.db.models import JSONField
 from django.template.defaultfilters import slugify
 from django.urls import reverse
 
@@ -272,8 +271,8 @@ class BaseRepresentative(models.Model):
     photo_url = models.URLField(blank=True, max_length=2048)
     district_id = models.CharField(blank=True, max_length=200)
     gender = models.CharField(blank=True, max_length=1, choices=(('F', 'Female'), ('M', 'Male')))
-    offices = JSONField(default=list)
-    extra = JSONField(default=dict)
+    offices = models.JSONField(default=list)
+    extra = models.JSONField(default=dict)
 
     class Meta:
         abstract = True
